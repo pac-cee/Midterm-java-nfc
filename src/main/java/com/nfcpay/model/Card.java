@@ -1,6 +1,7 @@
 package com.nfcpay.model;
 
 import com.nfcpay.model.enums.CardType;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -25,18 +26,31 @@ public class Card {
         this.cardUid = cardUid;
         this.cardName = cardName;
         this.cardType = cardType != null ? cardType : CardType.VIRTUAL;
+        this.balance = BigDecimal.ZERO;
+        this.isActive = true;
+        this.createdAt = LocalDateTime.now();
+    }
+    
+    // Constructor for new card with balance
+    public Card(int userId, String cardUid, String cardName, CardType cardType, BigDecimal balance) {
+        this.userId = userId;
+        this.cardUid = cardUid;
+        this.cardName = cardName;
+        this.cardType = cardType != null ? cardType : CardType.VIRTUAL;
+        this.balance = balance != null ? balance : BigDecimal.ZERO;
         this.isActive = true;
         this.createdAt = LocalDateTime.now();
     }
     
     // Full constructor
     public Card(int cardId, int userId, String cardUid, String cardName, CardType cardType, 
-                boolean isActive, LocalDateTime createdAt) {
+                BigDecimal balance, boolean isActive, LocalDateTime createdAt) {
         this.cardId = cardId;
         this.userId = userId;
         this.cardUid = cardUid;
         this.cardName = cardName;
         this.cardType = cardType;
+        this.balance = balance;
         this.isActive = isActive;
         this.createdAt = createdAt;
     }
@@ -82,12 +96,14 @@ public class Card {
         this.cardUid = cardNumber;
     }
     
-    public double getBalance() {
-        return 0.0; // Default balance, can be enhanced later
+    private BigDecimal balance;
+    
+    public BigDecimal getBalance() {
+        return balance != null ? balance : BigDecimal.ZERO;
     }
     
-    public void setBalance(double balance) {
-        // Placeholder for balance setting
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
     
     @Override

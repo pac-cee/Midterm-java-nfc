@@ -2,8 +2,10 @@ package com.nfcpay.service;
 
 import com.nfcpay.dao.WalletDAO;
 import com.nfcpay.dao.UserDAO;
+import com.nfcpay.dao.CardDAO;
 import com.nfcpay.model.Wallet;
 import com.nfcpay.model.User;
+import com.nfcpay.model.Card;
 import com.nfcpay.model.enums.Currency;
 import com.nfcpay.exception.ValidationException;
 import com.nfcpay.exception.NFCPayException;
@@ -15,10 +17,12 @@ import java.math.BigDecimal;
 public class WalletService {
     private final WalletDAO walletDAO;
     private final UserDAO userDAO;
+    private final CardDAO cardDAO;
     
     public WalletService() {
         this.walletDAO = new WalletDAO();
         this.userDAO = new UserDAO();
+        this.cardDAO = new CardDAO();
     }
     
     /**
@@ -41,9 +45,45 @@ public class WalletService {
     }
     
     /**
-     * Add funds to wallet
+     * Add funds to wallet from card
+     */
+    public void addFunds(int userId, int cardId, BigDecimal amount, String source) throws NFCPayException {
+        ValidationService.validatePositiveInteger(cardId, "Card ID");
+        
+        // Validate card ownership and get card
+        Card card = cardDAO.getCardById(cardId);
+        if (card == null || card.getUserId() != userId) {
+            throw new ValidationException("Card not found or doesn't belong to user");
+        }
+        
+        if (!card.isActive()) {
+            throw new ValidationException("Card is not active");
+        }
+        
+        // Check if card has sufficient balance
+        if (card.getBalance().compareTo(amount) < 0) {
+            throw new ValidationException(String.format("Insufficient card balance. Available: $%.2f, Requested: $%.2f", 
+                card.getBalance(), amount));
+        }
+        
+        addFundsInternal(userId, amount, source);
+        
+        // Deduct from card balance
+        BigDecimal newCardBalance = card.getBalance().subtract(amount);
+        cardDAO.updateCardBalance(cardId, newCardBalance);
+    }
+    
+    /**
+     * Add funds to wallet (legacy method for backward compatibility)
      */
     public void addFunds(int userId, BigDecimal amount, String source) throws NFCPayException {
+        addFundsInternal(userId, amount, source);
+    }
+    
+    /**
+     * Internal method to add funds to wallet
+     */
+    private void addFundsInternal(int userId, BigDecimal amount, String source) throws NFCPayException {
         ValidationService.validatePositiveInteger(userId, "User ID");
         ValidationService.validateAmount(amount);
         
@@ -70,9 +110,39 @@ public class WalletService {
     }
     
     /**
-     * Withdraw funds from wallet
+     * Withdraw funds from wallet to card
+     */
+    public void withdrawFunds(int userId, int cardId, BigDecimal amount, String destination) throws NFCPayException {
+        ValidationService.validatePositiveInteger(cardId, "Card ID");
+        
+        // Validate card ownership and get card
+        Card card = cardDAO.getCardById(cardId);
+        if (card == null || card.getUserId() != userId) {
+            throw new ValidationException("Card not found or doesn't belong to user");
+        }
+        
+        if (!card.isActive()) {
+            throw new ValidationException("Card is not active");
+        }
+        
+        withdrawFundsInternal(userId, amount, destination);
+        
+        // Add to card balance
+        BigDecimal newCardBalance = card.getBalance().add(amount);
+        cardDAO.updateCardBalance(cardId, newCardBalance);
+    }
+    
+    /**
+     * Withdraw funds from wallet (legacy method for backward compatibility)
      */
     public void withdrawFunds(int userId, BigDecimal amount, String destination) throws NFCPayException {
+        withdrawFundsInternal(userId, amount, destination);
+    }
+    
+    /**
+     * Internal method to withdraw funds from wallet
+     */
+    private void withdrawFundsInternal(int userId, BigDecimal amount, String destination) throws NFCPayException {
         ValidationService.validatePositiveInteger(userId, "User ID");
         ValidationService.validateAmount(amount);
         

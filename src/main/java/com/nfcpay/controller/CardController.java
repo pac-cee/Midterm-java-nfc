@@ -4,6 +4,7 @@ import com.nfcpay.service.CardService;
 import com.nfcpay.model.Card;
 import com.nfcpay.model.enums.CardType;
 import com.nfcpay.exception.NFCPayException;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -19,6 +20,10 @@ public class CardController {
     
     public Card addCard(int userId, String cardName, CardType cardType) throws NFCPayException {
         return cardService.addCard(userId, cardName, cardType);
+    }
+    
+    public Card addCard(int userId, String cardName, CardType cardType, BigDecimal initialBalance) throws NFCPayException {
+        return cardService.addCard(userId, cardName, cardType, initialBalance);
     }
     
     public void updateCard(int cardId, int userId, String cardName) throws NFCPayException {

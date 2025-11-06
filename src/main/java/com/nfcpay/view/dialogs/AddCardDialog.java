@@ -17,6 +17,7 @@ public class AddCardDialog extends JDialog {
     private final MainController mainController;
     private final JFrame parent;
     private JTextField cardNameField;
+    private JTextField balanceField;
     private JComboBox<CardType> cardTypeCombo;
     private CustomButton addButton;
     private CustomButton cancelButton;
@@ -34,6 +35,8 @@ public class AddCardDialog extends JDialog {
     
     private void initializeComponents() {
         cardNameField = new JTextField(20);
+        balanceField = new JTextField(20);
+        balanceField.setText("0.00");
         cardTypeCombo = new JComboBox<>(CardType.values());
         addButton = CustomButton.createSuccessButton("Add Card");
         cancelButton = CustomButton.createSecondaryButton("Cancel");
@@ -53,8 +56,14 @@ public class AddCardDialog extends JDialog {
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(cardNameField, gbc);
         
-        // Card Type
+        // Initial Balance
         gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
+        formPanel.add(new JLabel("Initial Balance:"), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(balanceField, gbc);
+        
+        // Card Type
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
         formPanel.add(new JLabel("Card Type:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(cardTypeCombo, gbc);
@@ -77,13 +86,14 @@ public class AddCardDialog extends JDialog {
     }
     
     private void setupDialog() {
-        setSize(350, 200);
+        setSize(350, 250);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
     
     private void handleAdd(ActionEvent e) {
         String cardName = cardNameField.getText().trim();
+        String balanceText = balanceField.getText().trim();
         CardType cardType = (CardType) cardTypeCombo.getSelectedItem();
         
         if (cardName.isEmpty()) {
@@ -92,11 +102,19 @@ public class AddCardDialog extends JDialog {
         }
         
         try {
+            java.math.BigDecimal initialBalance = new java.math.BigDecimal(balanceText);
+            if (initialBalance.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                UIUtils.showError(this, "Initial balance cannot be negative");
+                return;
+            }
+            
             mainController.getCardController().addCard(
-                Session.getCurrentUser().getUserId(), cardName, cardType);
+                Session.getCurrentUser().getUserId(), cardName, cardType, initialBalance);
             success = true;
             dispose();
             
+        } catch (NumberFormatException ex) {
+            UIUtils.showError(this, "Please enter a valid balance amount");
         } catch (Exception ex) {
             UIUtils.showError(this, "Failed to add card: " + ex.getMessage());
         }

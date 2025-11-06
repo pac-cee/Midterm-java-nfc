@@ -5,6 +5,7 @@ import com.nfcpay.model.Card;
 import com.nfcpay.model.enums.CardType;
 import com.nfcpay.util.Session;
 import com.nfcpay.util.NotificationManager;
+
 import com.nfcpay.view.components.*;
 import com.nfcpay.view.dialogs.ConfirmationDialog;
 
@@ -38,7 +39,7 @@ public class CardPanel extends JPanel {
         tableModel = new ModernTableModel<>(columns, card -> new Object[]{
             card.getCardId(),
             card.getCardName(),
-            "**** **** **** " + card.getCardNumber().substring(card.getCardNumber().length() - 4),
+            "**** **** **** " + card.getCardUid().substring(Math.max(0, card.getCardUid().length() - 4)),
             card.getCardType(),
             card.isActive() ? "Active" : "Inactive",
             String.format("$%.2f", card.getBalance())
@@ -127,14 +128,14 @@ public class CardPanel extends JPanel {
     private void handleAddCard(ActionEvent e) {
         try {
             if (!mainController.getCardController().canAddMoreCards(Session.getCurrentUser().getUserId())) {
-                NotificationManager.showError(this, "Maximum 5 cards allowed per user");
+                JOptionPane.showMessageDialog(this, "Maximum 5 cards allowed per user", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
             handleAddCardDialog();
             
         } catch (Exception ex) {
-            NotificationManager.showOperationError(this, "add card", ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Failed to add card: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -150,27 +151,27 @@ public class CardPanel extends JPanel {
             if (newName != null && !newName.trim().isEmpty()) {
                 mainController.getCardController().updateCard(selectedCard.getCardId(), 
                     Session.getCurrentUser().getUserId(), newName.trim());
-                NotificationManager.showOperationSuccess(this, "Update card");
+                JOptionPane.showMessageDialog(this, "Card updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 refreshData();
             }
             
         } catch (Exception ex) {
-            NotificationManager.showOperationError(this, "update card", ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Failed to update card: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
     private void handleToggleStatus(ActionEvent e) {
         int selectedRow = cardTable.getSelectedRow();
         if (selectedRow == -1) {
-            NotificationManager.showWarning(this, "Please select a card to toggle status");
+            JOptionPane.showMessageDialog(this, "Please select a card to toggle status", "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
         
         Card selectedCard = tableModel.getItemAt(selectedRow);
         String action = selectedCard.isActive() ? "deactivate" : "activate";
         
-        if (NotificationManager.showConfirmation(this, 
-            "Are you sure you want to " + action + " this card?")) {
+        if (JOptionPane.showConfirmDialog(this, 
+            "Are you sure you want to " + action + " this card?", "Confirm", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             
             try {
                 statusPanel.showProgress("Updating card status...", 50);
@@ -180,12 +181,12 @@ public class CardPanel extends JPanel {
                     Session.getCurrentUser().getUserId(), selectedCard.getCardName());
                 
                 statusPanel.showProgress("Status updated", 100);
-                NotificationManager.showOperationSuccess(this, "Update card status");
+                JOptionPane.showMessageDialog(this, "Card status updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 refreshData();
                 
             } catch (Exception ex) {
                 statusPanel.showStatus("Failed to update status", StatusPanel.StatusType.ERROR);
-                NotificationManager.showOperationError(this, "update card status", ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Failed to update card status: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -206,12 +207,12 @@ public class CardPanel extends JPanel {
                     Session.getCurrentUser().getUserId());
                 statusPanel.showProgress("Card deleted", 100);
                 
-                NotificationManager.showOperationSuccess(this, "Delete card");
+                JOptionPane.showMessageDialog(this, "Card deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 refreshData();
                 
             } catch (Exception ex) {
                 statusPanel.showStatus("Failed to delete card", StatusPanel.StatusType.ERROR);
-                NotificationManager.showOperationError(this, "delete card", ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Failed to delete card: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -249,7 +250,7 @@ public class CardPanel extends JPanel {
                     updateButtonStates();
                     
                     long activeCards = allCards.stream().mapToLong(card -> card.isActive() ? 1 : 0).sum();
-                    double totalBalance = allCards.stream().mapToDouble(card -> card.getBalance()).sum();
+                    double totalBalance = allCards.stream().mapToDouble(card -> card.getBalance().doubleValue()).sum();
                     
                     statusPanel.showProgress("Complete", 100);
                     statusPanel.showStatus("Loaded " + allCards.size() + " cards (" + 
@@ -258,8 +259,7 @@ public class CardPanel extends JPanel {
                     
                 } catch (Exception e) {
                     statusPanel.showStatus("Failed to load cards", StatusPanel.StatusType.ERROR);
-                    NotificationManager.showOperationError(CardPanel.this, 
-                                                         "load cards", e.getMessage());
+                    JOptionPane.showMessageDialog(CardPanel.this, "Failed to load cards: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -302,7 +302,7 @@ public class CardPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         
         JTextField nameField = new JTextField(20);
-        JTextField numberField = new JTextField(20);
+        // Card number field removed - using auto-generated UID
         JComboBox<CardType> typeCombo = new JComboBox<>(CardType.values());
         JTextField balanceField = new JTextField("0.00", 20);
         
@@ -311,17 +311,14 @@ public class CardPanel extends JPanel {
         gbc.gridx = 1;
         formPanel.add(nameField, gbc);
         
-        gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Card Number:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(numberField, gbc);
+
         
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 1;
         formPanel.add(new JLabel("Card Type:"), gbc);
         gbc.gridx = 1;
         formPanel.add(typeCombo, gbc);
         
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0; gbc.gridy = 2;
         formPanel.add(new JLabel("Initial Balance:"), gbc);
         gbc.gridx = 1;
         formPanel.add(balanceField, gbc);
@@ -336,47 +333,37 @@ public class CardPanel extends JPanel {
         saveButton.addActionListener(e -> {
             try {
                 if (nameField.getText().trim().isEmpty()) {
-                    NotificationManager.showValidationError(dialog, "Card Name", "Card name is required");
+                    JOptionPane.showMessageDialog(dialog, "Card name is required", "Validation Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 
-                if (numberField.getText().trim().length() != 16) {
-                    NotificationManager.showValidationError(dialog, "Card Number", "Card number must be 16 digits");
-                    return;
-                }
+
                 
                 double balance = Double.parseDouble(balanceField.getText());
                 if (balance < 0) {
-                    NotificationManager.showValidationError(dialog, "Balance", "Balance cannot be negative");
+                    JOptionPane.showMessageDialog(dialog, "Balance cannot be negative", "Validation Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 
                 statusPanel.showProgress("Creating card...", 50);
                 
-                Card newCard = new Card();
-                newCard.setUserId(Session.getCurrentUser().getUserId());
-                newCard.setCardName(nameField.getText().trim());
-                newCard.setCardNumber(numberField.getText().trim());
-                newCard.setCardType((CardType) typeCombo.getSelectedItem());
-                newCard.setBalance(balance);
-                newCard.setActive(true);
-                
                 mainController.getCardController().addCard(
                     Session.getCurrentUser().getUserId(),
-                    newCard.getCardName(),
-                    newCard.getCardType());
+                    nameField.getText().trim(),
+                    (CardType) typeCombo.getSelectedItem(),
+                    new java.math.BigDecimal(balance));
                 
                 statusPanel.showProgress("Card created", 100);
-                NotificationManager.showOperationSuccess(this, "Add card");
+                JOptionPane.showMessageDialog(this, "Card added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 
                 dialog.dispose();
                 refreshData();
                 
             } catch (NumberFormatException ex) {
-                NotificationManager.showValidationError(dialog, "Balance", "Please enter a valid balance amount");
+                JOptionPane.showMessageDialog(dialog, "Please enter a valid balance amount", "Validation Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 statusPanel.showStatus("Failed to create card", StatusPanel.StatusType.ERROR);
-                NotificationManager.showOperationError(dialog, "create card", ex.getMessage());
+                JOptionPane.showMessageDialog(dialog, "Failed to create card: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
         

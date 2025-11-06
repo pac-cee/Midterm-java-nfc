@@ -2,6 +2,7 @@ package com.nfcpay.dao;
 
 import com.nfcpay.model.Card;
 import com.nfcpay.model.enums.CardType;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class CardDAO {
     
     // CREATE - Add new card
     public boolean createCard(Card card) {
-        String sql = "INSERT INTO cards (user_id, card_uid, card_name, card_type, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO cards (user_id, card_uid, card_name, card_type, balance, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -29,8 +30,9 @@ public class CardDAO {
             pstmt.setString(2, card.getCardUid());
             pstmt.setString(3, card.getCardName());
             pstmt.setString(4, card.getCardType().toString());
-            pstmt.setBoolean(5, card.isActive());
-            pstmt.setTimestamp(6, Timestamp.valueOf(card.getCreatedAt()));
+            pstmt.setBigDecimal(5, card.getBalance());
+            pstmt.setBoolean(6, card.isActive());
+            pstmt.setTimestamp(7, Timestamp.valueOf(card.getCreatedAt()));
             
             int rowsAffected = pstmt.executeUpdate();
             
@@ -251,6 +253,41 @@ public class CardDAO {
         return getActiveCardCount(userId) < 5;
     }
     
+    // UPDATE - Update card balance
+    public boolean updateCardBalance(int cardId, BigDecimal newBalance) {
+        String sql = "UPDATE cards SET balance = ? WHERE card_id = ?";
+        
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setBigDecimal(1, newBalance);
+            pstmt.setInt(2, cardId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating card balance: " + e.getMessage());
+        }
+        return false;
+    }
+    
+    // READ - Get card balance
+    public BigDecimal getCardBalance(int cardId) {
+        String sql = "SELECT balance FROM cards WHERE card_id = ?";
+        
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, cardId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getBigDecimal("balance");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting card balance: " + e.getMessage());
+        }
+        return BigDecimal.ZERO;
+    }
+    
     // Helper method to map ResultSet to Card object
     private Card mapResultSetToCard(ResultSet rs) throws SQLException {
         Card card = new Card();
@@ -259,6 +296,7 @@ public class CardDAO {
         card.setCardUid(rs.getString("card_uid"));
         card.setCardName(rs.getString("card_name"));
         card.setCardType(CardType.valueOf(rs.getString("card_type")));
+        card.setBalance(rs.getBigDecimal("balance"));
         card.setActive(rs.getBoolean("is_active"));
         
         Timestamp createdAt = rs.getTimestamp("created_at");

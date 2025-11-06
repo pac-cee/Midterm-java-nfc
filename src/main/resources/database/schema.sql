@@ -37,6 +37,7 @@ CREATE TABLE cards (
     card_uid VARCHAR(50) UNIQUE NOT NULL,
     card_name VARCHAR(50) NOT NULL CHECK (LENGTH(card_name) >= 2),
     card_type VARCHAR(20) DEFAULT 'VIRTUAL' CHECK (card_type IN ('VIRTUAL', 'PHYSICAL')),
+    balance DECIMAL(10,2) DEFAULT 0.00 CHECK (balance >= 0),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

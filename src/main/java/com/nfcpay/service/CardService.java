@@ -7,6 +7,7 @@ import com.nfcpay.model.User;
 import com.nfcpay.model.enums.CardType;
 import com.nfcpay.exception.ValidationException;
 import com.nfcpay.exception.NFCPayException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Random;
 
@@ -28,6 +29,13 @@ public class CardService {
      * Add new card with validation
      */
     public Card addCard(int userId, String cardName, CardType cardType) throws NFCPayException {
+        return addCard(userId, cardName, cardType, BigDecimal.ZERO);
+    }
+    
+    /**
+     * Add new card with initial balance
+     */
+    public Card addCard(int userId, String cardName, CardType cardType, BigDecimal initialBalance) throws NFCPayException {
         ValidationService.validatePositiveInteger(userId, "User ID");
         ValidationService.validateStringLength(cardName, "Card name", 2, 50);
         ValidationService.validateNotNull(cardType, "Card type");
@@ -57,8 +65,13 @@ public class CardService {
             cardUid = generateCardUid();
         } while (cardDAO.cardUidExists(cardUid));
         
-        // Create card
-        Card card = new Card(userId, cardUid, cardName.trim(), cardType);
+        // Validate initial balance
+        if (initialBalance != null && initialBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Initial balance cannot be negative");
+        }
+        
+        // Create card with balance
+        Card card = new Card(userId, cardUid, cardName.trim(), cardType, initialBalance);
         boolean created = cardDAO.createCard(card);
         
         if (!created) {

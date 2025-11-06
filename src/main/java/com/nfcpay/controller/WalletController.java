@@ -25,8 +25,16 @@ public class WalletController {
         walletService.addFunds(userId, amount, source);
     }
     
+    public void addFunds(int userId, int cardId, BigDecimal amount, String source) throws NFCPayException {
+        walletService.addFunds(userId, cardId, amount, source);
+    }
+    
     public void withdrawFunds(int userId, BigDecimal amount, String destination) throws NFCPayException {
         walletService.withdrawFunds(userId, amount, destination);
+    }
+    
+    public void withdrawFunds(int userId, int cardId, BigDecimal amount, String destination) throws NFCPayException {
+        walletService.withdrawFunds(userId, cardId, amount, destination);
     }
     
     public void transferFunds(int fromUserId, int toUserId, BigDecimal amount, String description) throws NFCPayException {

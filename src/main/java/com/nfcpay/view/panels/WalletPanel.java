@@ -2,6 +2,7 @@ package com.nfcpay.view.panels;
 
 import com.nfcpay.controller.MainController;
 import com.nfcpay.model.Wallet;
+import com.nfcpay.model.Card;
 import com.nfcpay.util.Session;
 import com.nfcpay.util.UIUtils;
 import com.nfcpay.view.components.CustomButton;
@@ -10,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Wallet Management Panel
@@ -19,6 +21,7 @@ public class WalletPanel extends JPanel {
     private JLabel balanceLabel;
     private JLabel currencyLabel;
     private JTextField amountField;
+    private JComboBox<Card> cardComboBox;
     private JButton addFundsButton;
     private JButton withdrawButton;
     
@@ -38,6 +41,8 @@ public class WalletPanel extends JPanel {
         currencyLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         
         amountField = new JTextField(15);
+        cardComboBox = new JComboBox<>();
+        cardComboBox.setRenderer(new CardComboBoxRenderer());
         addFundsButton = CustomButton.createSuccessButton("Add Funds");
         withdrawButton = CustomButton.createDangerButton("Withdraw");
     }
@@ -91,6 +96,12 @@ public class WalletPanel extends JPanel {
         
         gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(10, 10, 10, 10);
+        operationsPanel.add(new JLabel("Select Card:"), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        operationsPanel.add(cardComboBox, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
         operationsPanel.add(new JLabel("Amount:"), gbc);
         
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -100,7 +111,7 @@ public class WalletPanel extends JPanel {
         buttonPanel.add(addFundsButton);
         buttonPanel.add(withdrawButton);
         
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
         operationsPanel.add(buttonPanel, gbc);
         
         // Layout
@@ -121,8 +132,15 @@ public class WalletPanel extends JPanel {
     
     private void handleAddFunds(ActionEvent e) {
         String amountText = amountField.getText().trim();
+        Card selectedCard = (Card) cardComboBox.getSelectedItem();
+        
         if (amountText.isEmpty()) {
             UIUtils.showError(this, "Please enter an amount");
+            return;
+        }
+        
+        if (selectedCard == null) {
+            UIUtils.showError(this, "Please select a card");
             return;
         }
         
@@ -134,12 +152,12 @@ public class WalletPanel extends JPanel {
             }
             
             if (UIUtils.showConfirmation(this, 
-                String.format("Add $%.2f to your wallet?", amount))) {
+                String.format("Transfer $%.2f from %s to your wallet?", amount, selectedCard.getCardName()))) {
                 
                 mainController.getWalletController().addFunds(
-                    Session.getCurrentUser().getUserId(), amount, "Manual deposit");
+                    Session.getCurrentUser().getUserId(), selectedCard.getCardId(), amount, "Card transfer");
                 
-                UIUtils.showSuccess(this, "Funds added successfully!");
+                UIUtils.showSuccess(this, "Funds transferred successfully!");
                 amountField.setText("");
                 refreshData();
             }
@@ -147,14 +165,21 @@ public class WalletPanel extends JPanel {
         } catch (NumberFormatException ex) {
             UIUtils.showError(this, "Please enter a valid amount");
         } catch (Exception ex) {
-            UIUtils.showError(this, "Failed to add funds: " + ex.getMessage());
+            UIUtils.showError(this, "Failed to transfer funds: " + ex.getMessage());
         }
     }
     
     private void handleWithdraw(ActionEvent e) {
         String amountText = amountField.getText().trim();
+        Card selectedCard = (Card) cardComboBox.getSelectedItem();
+        
         if (amountText.isEmpty()) {
             UIUtils.showError(this, "Please enter an amount");
+            return;
+        }
+        
+        if (selectedCard == null) {
+            UIUtils.showError(this, "Please select a card");
             return;
         }
         
@@ -166,12 +191,12 @@ public class WalletPanel extends JPanel {
             }
             
             if (UIUtils.showConfirmation(this, 
-                String.format("Withdraw $%.2f from your wallet?", amount))) {
+                String.format("Transfer $%.2f from wallet to %s?", amount, selectedCard.getCardName()))) {
                 
                 mainController.getWalletController().withdrawFunds(
-                    Session.getCurrentUser().getUserId(), amount, "Manual withdrawal");
+                    Session.getCurrentUser().getUserId(), selectedCard.getCardId(), amount, "Card transfer");
                 
-                UIUtils.showSuccess(this, "Withdrawal successful!");
+                UIUtils.showSuccess(this, "Funds transferred successfully!");
                 amountField.setText("");
                 refreshData();
             }
@@ -179,7 +204,7 @@ public class WalletPanel extends JPanel {
         } catch (NumberFormatException ex) {
             UIUtils.showError(this, "Please enter a valid amount");
         } catch (Exception ex) {
-            UIUtils.showError(this, "Failed to withdraw funds: " + ex.getMessage());
+            UIUtils.showError(this, "Failed to transfer funds: " + ex.getMessage());
         }
     }
     
@@ -189,8 +214,31 @@ public class WalletPanel extends JPanel {
             balanceLabel.setText(String.format("$%.2f", wallet.getBalance()));
             currencyLabel.setText(wallet.getCurrency().toString());
             
+            // Load user's active cards
+            List<Card> cards = mainController.getCardController().getActiveCards(Session.getCurrentUser().getUserId());
+            cardComboBox.removeAllItems();
+            for (Card card : cards) {
+                cardComboBox.addItem(card);
+            }
+            
         } catch (Exception e) {
             UIUtils.showError(this, "Failed to load wallet data: " + e.getMessage());
+        }
+    }
+    
+    // Custom renderer for card combo box
+    private class CardComboBoxRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, 
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            
+            if (value instanceof Card) {
+                Card card = (Card) value;
+                setText(String.format("%s - $%.2f", card.getCardName(), card.getBalance()));
+            }
+            
+            return this;
         }
     }
 }
