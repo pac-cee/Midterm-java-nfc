@@ -32,45 +32,59 @@ public class LoginFrame extends JFrame {
     }
     
     private void initializeComponents() {
-        emailField = new JTextField(25);
-        emailField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        emailField.setPreferredSize(new Dimension(300, 35));
+        emailField = new JTextField(30);
+        emailField.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        emailField.setPreferredSize(new Dimension(400, 50));
+        emailField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
         
-        passwordField = new JPasswordField(25);
-        passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        passwordField.setPreferredSize(new Dimension(300, 35));
+        passwordField = new JPasswordField(30);
+        passwordField.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        passwordField.setPreferredSize(new Dimension(400, 50));
+        passwordField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+        
         loginButton = new CustomButton("🔑 Login", CustomButton.ButtonStyle.PRIMARY);
-        loginButton.setPreferredSize(new Dimension(300, 45));
-        loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        loginButton.setPreferredSize(new Dimension(400, 55));
+        loginButton.setFont(new Font("SansSerif", Font.BOLD, 18));
         
         registerButton = new CustomButton("🆕 Register", CustomButton.ButtonStyle.SUCCESS);
-        registerButton.setPreferredSize(new Dimension(300, 45));
-        registerButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        
-        // Theme toggle button
-        JButton themeButton = new JButton("🌙");
-        themeButton.setPreferredSize(new Dimension(40, 40));
-        themeButton.addActionListener(e -> {
-            ThemeManager.toggleTheme();
-            themeButton.setText(ThemeManager.isDarkMode() ? "☀️" : "🌙");
-        });
+        registerButton.setPreferredSize(new Dimension(400, 55));
+        registerButton.setFont(new Font("SansSerif", Font.BOLD, 18));
     }
     
     private void setupLayout() {
         setLayout(new BorderLayout());
         
-        // Header Panel
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(new Color(52, 58, 64));
-        headerPanel.setPreferredSize(new Dimension(0, 80));
-        JLabel titleLabel = new JLabel("NFC Payment System 💳", SwingConstants.CENTER);
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
-        headerPanel.add(titleLabel);
+        // Header Panel with gradient
+        JPanel headerPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                GradientPaint gradient = new GradientPaint(0, 0, new Color(41, 128, 185), 
+                                                         getWidth(), 0, new Color(52, 152, 219));
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        headerPanel.setPreferredSize(new Dimension(0, 120));
+        headerPanel.setLayout(new BorderLayout());
         
-        // Add theme toggle to header
+        JLabel titleLabel = new JLabel("💳 NFC Payment System", SwingConstants.CENTER);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 36));
+        
         JButton themeButton = new JButton("🌙");
-        themeButton.setPreferredSize(new Dimension(40, 40));
+        themeButton.setPreferredSize(new Dimension(50, 50));
+        themeButton.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        themeButton.setBackground(new Color(255, 255, 255, 100));
+        themeButton.setBorder(BorderFactory.createEmptyBorder());
+        themeButton.setFocusPainted(false);
         themeButton.addActionListener(e -> {
             ThemeManager.toggleTheme();
             themeButton.setText(ThemeManager.isDarkMode() ? "☀️" : "🌙");
@@ -80,47 +94,71 @@ public class LoginFrame extends JFrame {
         headerContent.add(titleLabel, BorderLayout.CENTER);
         headerContent.add(themeButton, BorderLayout.EAST);
         headerContent.setOpaque(false);
-        headerPanel.removeAll();
+        headerContent.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
         headerPanel.add(headerContent);
         
-        // Main Panel
-        JPanel mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        // Main content with card design
+        JPanel mainContainer = new JPanel(new GridBagLayout());
+        mainContainer.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
+        
+        // Login card
+        JPanel loginCard = new JPanel(new GridBagLayout());
+        loginCard.setBackground(Color.WHITE);
+        loginCard.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+            BorderFactory.createEmptyBorder(50, 50, 50, 50)
+        ));
+        loginCard.setPreferredSize(new Dimension(500, 450));
+        
         GridBagConstraints gbc = new GridBagConstraints();
         
+        // Welcome text
+        JLabel welcomeLabel = new JLabel("Welcome Back!", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        welcomeLabel.setForeground(new Color(52, 58, 64));
+        gbc.gridx = 0; gbc.gridy = 0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 40, 0);
+        loginCard.add(welcomeLabel, gbc);
+        
         // Email
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
-        JLabel emailLabel = new JLabel("📧 Email:");
-        emailLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        mainPanel.add(emailLabel, gbc);
-        gbc.gridy = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(8, 0, 20, 0);
-        mainPanel.add(emailField, gbc);
+        JLabel emailLabel = new JLabel("📧 Email Address");
+        emailLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        emailLabel.setForeground(new Color(73, 80, 87));
+        gbc.gridy = 1; gbc.insets = new Insets(0, 0, 8, 0);
+        loginCard.add(emailLabel, gbc);
+        
+        gbc.gridy = 2; gbc.insets = new Insets(0, 0, 25, 0);
+        loginCard.add(emailField, gbc);
         
         // Password
-        gbc.gridy = 2; gbc.insets = new Insets(0, 0, 0, 0);
-        JLabel passwordLabel = new JLabel("🔒 Password:");
-        passwordLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        mainPanel.add(passwordLabel, gbc);
-        gbc.gridy = 3; gbc.insets = new Insets(8, 0, 30, 0);
-        mainPanel.add(passwordField, gbc);
+        JLabel passwordLabel = new JLabel("🔒 Password");
+        passwordLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        passwordLabel.setForeground(new Color(73, 80, 87));
+        gbc.gridy = 3; gbc.insets = new Insets(0, 0, 8, 0);
+        loginCard.add(passwordLabel, gbc);
+        
+        gbc.gridy = 4; gbc.insets = new Insets(0, 0, 35, 0);
+        loginCard.add(passwordField, gbc);
         
         // Login Button
-        gbc.gridy = 4; gbc.insets = new Insets(0, 0, 10, 0); gbc.fill = GridBagConstraints.HORIZONTAL;
-        mainPanel.add(loginButton, gbc);
+        gbc.gridy = 5; gbc.insets = new Insets(0, 0, 15, 0);
+        loginCard.add(loginButton, gbc);
         
         // Register Button
-        gbc.gridy = 5; gbc.insets = new Insets(0, 0, 10, 0);
-        mainPanel.add(registerButton, gbc);
+        gbc.gridy = 6; gbc.insets = new Insets(0, 0, 20, 0);
+        loginCard.add(registerButton, gbc);
         
-        // "New User?" label
-        JLabel newUserLabel = new JLabel("Don't have an account? Click Register above", SwingConstants.CENTER);
-        newUserLabel.setFont(new Font("Arial", Font.PLAIN, 11));
-        newUserLabel.setForeground(Color.GRAY);
-        gbc.gridy = 6; gbc.insets = new Insets(10, 0, 0, 0);
-        mainPanel.add(newUserLabel, gbc);
+        // Help text
+        JLabel helpLabel = new JLabel("Don't have an account? Click Register above", SwingConstants.CENTER);
+        helpLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        helpLabel.setForeground(new Color(108, 117, 125));
+        gbc.gridy = 7; gbc.insets = new Insets(0, 0, 0, 0);
+        loginCard.add(helpLabel, gbc);
+        
+        mainContainer.add(loginCard);
         
         add(headerPanel, BorderLayout.NORTH);
-        add(mainPanel, BorderLayout.CENTER);
+        add(mainContainer, BorderLayout.CENTER);
     }
     
     private void setupEventHandlers() {
@@ -137,7 +175,7 @@ public class LoginFrame extends JFrame {
     private void setupFrame() {
         setTitle("NFC Payment System - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(550, 500);
+        setSize(1000, 700);
         setResizable(false);
         UIUtils.centerWindow(this);
     }

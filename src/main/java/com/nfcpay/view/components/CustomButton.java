@@ -33,9 +33,28 @@ public class CustomButton extends JButton {
         setForeground(Color.WHITE);
         setFocusPainted(false);
         setBorderPainted(false);
-        setFont(new Font("Arial", Font.BOLD, 12));
+        setFont(new Font("SansSerif", Font.BOLD, 14));
         setCursor(new Cursor(Cursor.HAND_CURSOR));
-        setPreferredSize(new Dimension(120, 35));
+        setPreferredSize(new Dimension(140, 45));
+        
+        // Add hover effect
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            Color originalColor = getBackground();
+            
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                if (isEnabled()) {
+                    setBackground(originalColor.darker());
+                }
+            }
+            
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                if (isEnabled()) {
+                    setBackground(originalColor);
+                }
+            }
+        });
     }
     
     public static CustomButton createPrimaryButton(String text) {
