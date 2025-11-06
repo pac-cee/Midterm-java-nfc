@@ -34,7 +34,7 @@ public class Transaction {
         this.amount = amount;
         this.transactionType = transactionType != null ? transactionType : TransactionType.PAYMENT;
         this.status = TransactionStatus.PENDING;
-        this.referenceCode = referenceCode;
+        this.referenceCode = referenceCode != null ? referenceCode : com.nfcpay.util.UIDGenerator.generateTransactionReference();
         this.description = description;
         this.createdAt = LocalDateTime.now();
     }
@@ -48,6 +48,7 @@ public class Transaction {
         this.amount = amount;
         this.transactionType = TransactionType.valueOf(transactionType);
         this.status = TransactionStatus.valueOf(status);
+        this.referenceCode = com.nfcpay.util.UIDGenerator.generateTransactionReference();
         this.description = description;
         this.createdAt = LocalDateTime.now();
     }
@@ -100,7 +101,9 @@ public class Transaction {
     }
     
     public String getReferenceCode() { return referenceCode; }
-    public void setReferenceCode(String referenceCode) { this.referenceCode = referenceCode; }
+    public void setReferenceCode(String referenceCode) { 
+        this.referenceCode = referenceCode != null ? referenceCode : com.nfcpay.util.UIDGenerator.generateTransactionReference();
+    }
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

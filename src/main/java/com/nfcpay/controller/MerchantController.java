@@ -47,4 +47,8 @@ public class MerchantController {
     public boolean isMerchantCodeAvailable(String merchantCode) throws NFCPayException {
         return merchantService.isMerchantCodeAvailable(merchantCode);
     }
+    
+    public List<Merchant> getAllMerchants() throws NFCPayException {
+        return merchantService.getAllMerchants();
+    }
 }

@@ -115,4 +115,11 @@ public class MerchantService {
         ValidationService.validateMerchantCode(merchantCode);
         return merchantDAO.getMerchantByCode(merchantCode.toUpperCase()) == null;
     }
+    
+    /**
+     * Get all merchants (active and inactive)
+     */
+    public List<Merchant> getAllMerchants() throws NFCPayException {
+        return merchantDAO.getAllMerchants();
+    }
 }

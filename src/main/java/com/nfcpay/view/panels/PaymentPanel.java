@@ -4,6 +4,7 @@ import com.nfcpay.controller.MainController;
 import com.nfcpay.model.Card;
 import com.nfcpay.model.Merchant;
 import com.nfcpay.model.Transaction;
+import com.nfcpay.model.Wallet;
 import com.nfcpay.util.Session;
 import com.nfcpay.util.UIUtils;
 import com.nfcpay.view.components.CustomButton;

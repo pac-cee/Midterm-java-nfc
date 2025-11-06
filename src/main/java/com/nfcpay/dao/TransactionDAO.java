@@ -23,6 +23,11 @@ public class TransactionDAO {
     
     // CREATE - Create new transaction
     public boolean createTransaction(Transaction transaction) {
+        // Ensure reference code is not null
+        if (transaction.getReferenceCode() == null) {
+            transaction.setReferenceCode(com.nfcpay.util.UIDGenerator.generateTransactionReference());
+        }
+        
         String sql = "INSERT INTO transactions (user_id, card_id, merchant_id, amount, transaction_type, status, reference_code, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = dbConnection.getConnection();

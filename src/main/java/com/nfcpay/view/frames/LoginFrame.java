@@ -164,21 +164,10 @@ public class LoginFrame extends JFrame {
             NotificationManager.showSuccess(this, "Login successful! Welcome " + user.getFullName());
             
             // Open main application
-            System.out.println("Opening MainFrame for user: " + user.getFullName());
             SwingUtilities.invokeLater(() -> {
-                try {
-                    MainFrame mainFrame = new MainFrame(mainController);
-                    mainFrame.setVisible(true);
-                    dispose();
-                    System.out.println("MainFrame opened successfully");
-                } catch (Exception ex) {
-                    System.err.println("Error opening MainFrame: " + ex.getMessage());
-                    ex.printStackTrace();
-                    // Fallback to simple frame
-                    SimpleMainFrame simpleFrame = new SimpleMainFrame(user);
-                    simpleFrame.setVisible(true);
-                    dispose();
-                }
+                MainFrame mainFrame = new MainFrame(mainController);
+                mainFrame.setVisible(true);
+                dispose();
             });
             
         } catch (Exception ex) {
