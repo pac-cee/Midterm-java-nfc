@@ -53,7 +53,7 @@ public class TransactionPanel extends JPanel {
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(new Color(33, 37, 41));
         
         // Header with gradient
         JPanel headerPanel = new JPanel(new BorderLayout()) {
@@ -81,29 +81,39 @@ public class TransactionPanel extends JPanel {
         
         // Search container
         JPanel searchContainer = new JPanel(new BorderLayout());
-        searchContainer.setBackground(Color.WHITE);
+        searchContainer.setBackground(new Color(33, 37, 41));
         searchContainer.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         searchContainer.add(searchPanel, BorderLayout.CENTER);
+        
+        // Style table for dark theme
+        transactionTable.setBackground(new Color(33, 37, 41));
+        transactionTable.setForeground(Color.WHITE);
+        transactionTable.getTableHeader().setBackground(new Color(52, 58, 64));
+        transactionTable.getTableHeader().setForeground(Color.WHITE);
+        transactionTable.setGridColor(new Color(52, 58, 64));
+        transactionTable.setSelectionBackground(new Color(52, 58, 64));
+        transactionTable.setSelectionForeground(Color.WHITE);
         
         // Table container
         JScrollPane scrollPane = new JScrollPane(transactionTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(new Color(33, 37, 41));
+        scrollPane.setBackground(new Color(33, 37, 41));
         
         JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(Color.WHITE);
+        tableContainer.setBackground(new Color(33, 37, 41));
         tableContainer.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 20));
         tableContainer.add(scrollPane, BorderLayout.CENTER);
         
         // Action panel
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        actionPanel.setBackground(Color.WHITE);
+        actionPanel.setBackground(new Color(33, 37, 41));
         actionPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 20));
         actionPanel.add(refundButton);
         
         // Pagination container
         JPanel paginationContainer = new JPanel(new BorderLayout());
-        paginationContainer.setBackground(Color.WHITE);
+        paginationContainer.setBackground(new Color(33, 37, 41));
         paginationContainer.setBorder(BorderFactory.createEmptyBorder(0, 20, 10, 20));
         paginationContainer.add(paginationPanel, BorderLayout.CENTER);
         

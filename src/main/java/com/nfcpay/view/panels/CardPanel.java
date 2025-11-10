@@ -57,7 +57,7 @@ public class CardPanel extends JPanel {
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(new Color(33, 37, 41));
         
         // Header with gradient
         JPanel headerPanel = new JPanel(new BorderLayout()) {
@@ -82,19 +82,29 @@ public class CardPanel extends JPanel {
         
         // Remove search panel - not needed for cards
         
+        // Style table for dark theme
+        cardTable.setBackground(new Color(33, 37, 41));
+        cardTable.setForeground(Color.WHITE);
+        cardTable.getTableHeader().setBackground(new Color(52, 58, 64));
+        cardTable.getTableHeader().setForeground(Color.WHITE);
+        cardTable.setGridColor(new Color(52, 58, 64));
+        cardTable.setSelectionBackground(new Color(52, 58, 64));
+        cardTable.setSelectionForeground(Color.WHITE);
+        
         // Table container
         JScrollPane scrollPane = new JScrollPane(cardTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getViewport().setBackground(new Color(33, 37, 41));
+        scrollPane.setBackground(new Color(33, 37, 41));
         
         JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(Color.WHITE);
+        tableContainer.setBackground(new Color(33, 37, 41));
         tableContainer.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
         tableContainer.add(scrollPane, BorderLayout.CENTER);
         
         // Action buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBackground(new Color(33, 37, 41));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
         
         buttonPanel.add(editButton);
@@ -176,9 +186,14 @@ public class CardPanel extends JPanel {
             try {
                 statusPanel.showProgress("Updating card status...", 50);
                 
-                selectedCard.setActive(!selectedCard.isActive());
-                mainController.getCardController().updateCard(selectedCard.getCardId(), 
-                    Session.getCurrentUser().getUserId(), selectedCard.getCardName());
+                // FIX: Call the correct activate/deactivate methods
+                if (selectedCard.isActive()) {
+                    mainController.getCardController().deactivateCard(selectedCard.getCardId(), 
+                        Session.getCurrentUser().getUserId());
+                } else {
+                    mainController.getCardController().activateCard(selectedCard.getCardId(), 
+                        Session.getCurrentUser().getUserId());
+                }
                 
                 statusPanel.showProgress("Status updated", 100);
                 JOptionPane.showMessageDialog(this, "Card status updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);

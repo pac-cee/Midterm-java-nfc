@@ -92,10 +92,6 @@ public class MainFrame extends JFrame {
     private void setupLayout() {
         setLayout(new BorderLayout());
         
-        // Top Menu Bar
-        JMenuBar menuBar = createMenuBar();
-        setJMenuBar(menuBar);
-        
         // Navigation Panel
         JPanel navPanel = createNavigationPanel();
         
@@ -110,42 +106,14 @@ public class MainFrame extends JFrame {
         add(contentPanel, BorderLayout.CENTER);
     }
     
-    private JMenuBar createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        
-        // Account Menu
-        JMenu accountMenu = new JMenu("Account");
-        JMenuItem profileItem = new JMenuItem("Profile");
-        JMenuItem themeItem = new JMenuItem("Toggle Theme");
-        JMenuItem logoutItem = new JMenuItem("Logout");
-        
-        profileItem.addActionListener(e -> showProfile());
-        themeItem.addActionListener(e -> ThemeManager.toggleTheme());
-        logoutItem.addActionListener(this::handleLogout);
-        
-        accountMenu.add(profileItem);
-        accountMenu.add(themeItem);
-        accountMenu.addSeparator();
-        accountMenu.add(logoutItem);
-        
-        // Help Menu
-        JMenu helpMenu = new JMenu("Help");
-        JMenuItem aboutItem = new JMenuItem("About");
-        aboutItem.addActionListener(e -> showAbout());
-        helpMenu.add(aboutItem);
-        
-        menuBar.add(accountMenu);
-        menuBar.add(helpMenu);
-        
-        return menuBar;
-    }
+
     
     private JPanel createNavigationPanel() {
         JPanel navPanel = new JPanel();
         navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
         navPanel.setBackground(new Color(248, 249, 250));
         navPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
-        navPanel.setPreferredSize(new Dimension(250, 0));
+        navPanel.setPreferredSize(new Dimension(280, 0));
         
         // User Info
         JLabel userLabel = new JLabel("👋 Welcome, " + Session.getCurrentUser().getFullName());
@@ -155,11 +123,11 @@ public class MainFrame extends JFrame {
         navPanel.add(Box.createVerticalStrut(20));
         
         // Navigation Buttons
-        JButton dashboardBtn = createNavButton("Dashboard", "DASHBOARD");
-        JButton cardsBtn = createNavButton("My Cards", "CARDS");
-        JButton walletBtn = createNavButton("Wallet", "WALLET");
-        JButton paymentBtn = createNavButton("Make Payment", "PAYMENT");
-        JButton transactionsBtn = createNavButton("Transactions", "TRANSACTIONS");
+        JButton dashboardBtn = createNavButton("📊 Dashboard", "DASHBOARD");
+        JButton cardsBtn = createNavButton("💳 My Cards", "CARDS");
+        JButton walletBtn = createNavButton("💰 Wallet", "WALLET");
+        JButton paymentBtn = createNavButton("💸 Make Payment", "PAYMENT");
+        JButton transactionsBtn = createNavButton("📋 Transactions", "TRANSACTIONS");
         
         navPanel.add(dashboardBtn);
         navPanel.add(Box.createVerticalStrut(10));
@@ -171,15 +139,55 @@ public class MainFrame extends JFrame {
         navPanel.add(Box.createVerticalStrut(10));
         navPanel.add(transactionsBtn);
         
+        // Push account buttons to bottom
+        navPanel.add(Box.createVerticalGlue());
+        navPanel.add(Box.createVerticalStrut(20));
+        
+        // Account Buttons
+        JButton profileBtn = createAccountButton("👤 Profile");
+        JButton themeBtn = createAccountButton(ThemeManager.isDarkMode() ? "☀️ Theme" : "🌙 Theme");
+        JButton logoutBtn = createAccountButton("🚪 Logout");
+        JButton aboutBtn = createAccountButton("ℹ️ About");
+        
+        profileBtn.addActionListener(e -> showProfile());
+        themeBtn.addActionListener(e -> {
+            ThemeManager.toggleTheme();
+            themeBtn.setText(ThemeManager.isDarkMode() ? "☀️ Theme" : "🌙 Theme");
+        });
+        logoutBtn.addActionListener(this::handleLogout);
+        aboutBtn.addActionListener(e -> showAbout());
+        
+        navPanel.add(profileBtn);
+        navPanel.add(Box.createVerticalStrut(8));
+        navPanel.add(themeBtn);
+        navPanel.add(Box.createVerticalStrut(8));
+        navPanel.add(aboutBtn);
+        navPanel.add(Box.createVerticalStrut(8));
+        navPanel.add(logoutBtn);
+        
         return navPanel;
     }
     
     private JButton createNavButton(String text, String panelName) {
         JButton button = new JButton(text);
-        button.setMaximumSize(new Dimension(220, 50));
-        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setMaximumSize(new Dimension(240, 60));
+        button.setPreferredSize(new Dimension(240, 60));
+        button.setFont(new Font("SansSerif", Font.BOLD, 16));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         button.addActionListener(e -> showPanel(panelName));
+        return button;
+    }
+    
+    private JButton createAccountButton(String text) {
+        JButton button = new JButton(text);
+        button.setMaximumSize(new Dimension(240, 55));
+        button.setPreferredSize(new Dimension(240, 55));
+        button.setFont(new Font("SansSerif", Font.BOLD, 15));
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setBackground(new Color(108, 117, 125));
+        button.setForeground(Color.WHITE);
+        button.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        button.setFocusPainted(false);
         return button;
     }
     

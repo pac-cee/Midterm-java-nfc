@@ -49,7 +49,7 @@ public class WalletPanel extends JPanel {
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(new Color(33, 37, 41));
         
         // Header with gradient
         JPanel headerPanel = new JPanel(new BorderLayout()) {
@@ -76,11 +76,11 @@ public class WalletPanel extends JPanel {
             BorderFactory.createLineBorder(Color.LIGHT_GRAY),
             BorderFactory.createEmptyBorder(40, 40, 40, 40)
         ));
-        balanceCard.setBackground(Color.WHITE);
+        balanceCard.setBackground(new Color(52, 58, 64));
         
         JLabel balanceTitle = new JLabel("Current Balance");
         balanceTitle.setFont(new Font("Arial", Font.PLAIN, 16));
-        balanceTitle.setForeground(Color.GRAY);
+        balanceTitle.setForeground(new Color(173, 181, 189));
         
         JPanel balanceInfo = new JPanel(new FlowLayout(FlowLayout.CENTER));
         balanceInfo.add(balanceLabel);
@@ -91,18 +91,23 @@ public class WalletPanel extends JPanel {
         
         // Operations Panel
         JPanel operationsPanel = new JPanel(new GridBagLayout());
-        operationsPanel.setBorder(BorderFactory.createTitledBorder("Wallet Operations"));
+        operationsPanel.setBackground(new Color(52, 58, 64));
+        operationsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(173, 181, 189)), "Wallet Operations", 0, 0, new Font("SansSerif", Font.BOLD, 14), Color.WHITE));
         GridBagConstraints gbc = new GridBagConstraints();
         
         gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(10, 10, 10, 10);
-        operationsPanel.add(new JLabel("Select Card:"), gbc);
+        JLabel selectCardLabel = new JLabel("Select Card:");
+        selectCardLabel.setForeground(Color.WHITE);
+        operationsPanel.add(selectCardLabel, gbc);
         
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         operationsPanel.add(cardComboBox, gbc);
         
         gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
-        operationsPanel.add(new JLabel("Amount:"), gbc);
+        JLabel amountLabel = new JLabel("Amount:");
+        amountLabel.setForeground(Color.WHITE);
+        operationsPanel.add(amountLabel, gbc);
         
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         operationsPanel.add(amountField, gbc);
@@ -116,7 +121,7 @@ public class WalletPanel extends JPanel {
         
         // Layout
         JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBackground(Color.WHITE);
+        centerPanel.setBackground(new Color(33, 37, 41));
         centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
         centerPanel.add(balanceCard, BorderLayout.NORTH);
         centerPanel.add(operationsPanel, BorderLayout.CENTER);

@@ -32,7 +32,8 @@ public class DashboardPanel extends JPanel {
         balanceLabel.setForeground(new Color(40, 167, 69));
         
         cardCountLabel = new JLabel("0 Cards");
-        cardCountLabel.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        cardCountLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+        cardCountLabel.setForeground(Color.WHITE);
         
         recentTransactionsTable = new JTable();
         recentTransactionsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -40,7 +41,7 @@ public class DashboardPanel extends JPanel {
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setBackground(new Color(33, 37, 41));
         
         // Header with gradient
         JPanel headerPanel = new JPanel(new BorderLayout()) {
@@ -64,6 +65,7 @@ public class DashboardPanel extends JPanel {
         // Stats Panel
         JPanel statsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         statsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        statsPanel.setBackground(new Color(33, 37, 41));
         
         // Balance Card
         JPanel balanceCard = createStatsCard("Wallet Balance", balanceLabel);
@@ -74,13 +76,36 @@ public class DashboardPanel extends JPanel {
         statsPanel.add(balanceCard);
         statsPanel.add(cardsCard);
         
-        // Recent Transactions
+        // Recent Transactions with modern dark styling
         JPanel transactionsPanel = new JPanel(new BorderLayout());
-        transactionsPanel.setBorder(BorderFactory.createTitledBorder("Recent Transactions"));
-        transactionsPanel.add(new JScrollPane(recentTransactionsTable), BorderLayout.CENTER);
+        transactionsPanel.setBackground(new Color(33, 37, 41));
+        
+        JLabel transactionsTitle = new JLabel("Recent Transactions");
+        transactionsTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
+        transactionsTitle.setForeground(Color.WHITE);
+        transactionsTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        
+        // Style the table with dark theme
+        recentTransactionsTable.getTableHeader().setBackground(new Color(52, 58, 64));
+        recentTransactionsTable.getTableHeader().setForeground(Color.WHITE);
+        recentTransactionsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
+        recentTransactionsTable.setBackground(new Color(33, 37, 41));
+        recentTransactionsTable.setForeground(Color.WHITE);
+        recentTransactionsTable.setGridColor(new Color(52, 58, 64));
+        recentTransactionsTable.setRowHeight(35);
+        recentTransactionsTable.setSelectionBackground(new Color(52, 58, 64));
+        recentTransactionsTable.setSelectionForeground(Color.WHITE);
+        
+        JScrollPane scrollPane = new JScrollPane(recentTransactionsTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(new Color(33, 37, 41));
+        scrollPane.setBackground(new Color(33, 37, 41));
+        
+        transactionsPanel.add(transactionsTitle, BorderLayout.NORTH);
+        transactionsPanel.add(scrollPane, BorderLayout.CENTER);
         
         JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBackground(new Color(33, 37, 41));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
         contentPanel.add(statsPanel, BorderLayout.NORTH);
         contentPanel.add(transactionsPanel, BorderLayout.CENTER);
@@ -92,14 +117,17 @@ public class DashboardPanel extends JPanel {
     private JPanel createStatsCard(String title, JLabel valueLabel) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            BorderFactory.createLineBorder(new Color(52, 58, 64)),
+            BorderFactory.createEmptyBorder(25, 25, 25, 25)
         ));
-        card.setBackground(Color.WHITE);
+        card.setBackground(new Color(52, 58, 64));
         
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        titleLabel.setForeground(Color.GRAY);
+        titleLabel.setForeground(new Color(173, 181, 189));
+        
+        // Update value label colors for dark theme
+        valueLabel.setForeground(Color.WHITE);
         
         card.add(titleLabel, BorderLayout.NORTH);
         card.add(valueLabel, BorderLayout.CENTER);

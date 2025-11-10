@@ -73,7 +73,7 @@ public class PaymentPanel extends JPanel {
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(new Color(33, 37, 41));
         
         // Header with gradient
         JPanel headerPanel = new JPanel(new BorderLayout()) {
@@ -101,31 +101,40 @@ public class PaymentPanel extends JPanel {
         
         // Payment Form
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createTitledBorder("Payment Details"));
+        formPanel.setBackground(new Color(52, 58, 64));
+        formPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(173, 181, 189)), "Payment Details", 0, 0, new Font("SansSerif", Font.BOLD, 14), Color.WHITE));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         
         // Card Selection
         gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(new JLabel("Select Card:"), gbc);
+        JLabel cardLabel = new JLabel("Select Card:");
+        cardLabel.setForeground(Color.WHITE);
+        formPanel.add(cardLabel, gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(cardComboBox, gbc);
         
         // Merchant Selection
         gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel("Select Merchant:"), gbc);
+        JLabel merchantLabel = new JLabel("Select Merchant:");
+        merchantLabel.setForeground(Color.WHITE);
+        formPanel.add(merchantLabel, gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(merchantComboBox, gbc);
         
         // Amount
         gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel("Amount ($):"), gbc);
+        JLabel amountLabel = new JLabel("Amount ($):");
+        amountLabel.setForeground(Color.WHITE);
+        formPanel.add(amountLabel, gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(amountField, gbc);
         
         // Description
         gbc.gridx = 0; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel("Description:"), gbc);
+        JLabel descLabel = new JLabel("Description:");
+        descLabel.setForeground(Color.WHITE);
+        formPanel.add(descLabel, gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(descriptionField, gbc);
         
@@ -135,7 +144,7 @@ public class PaymentPanel extends JPanel {
         formPanel.add(payButton, gbc);
         
         JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBackground(new Color(33, 37, 41));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
         contentPanel.add(formPanel, BorderLayout.CENTER);
         
