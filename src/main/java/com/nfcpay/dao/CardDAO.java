@@ -68,24 +68,7 @@ public class CardDAO {
         return null;
     }
     
-    // READ - Get card by UID
-    public Card getCardByUid(String cardUid) {
-        String sql = "SELECT * FROM cards WHERE card_uid = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, cardUid);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return mapResultSetToCard(rs);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting card by UID: " + e.getMessage());
-        }
-        return null;
-    }
+
     
     // READ - Get all cards for user
     public List<Card> getCardsByUserId(int userId) {
@@ -175,17 +158,43 @@ public class CardDAO {
         return false;
     }
     
-    // DELETE - Delete card
+    // DELETE - Delete card (soft delete if has transactions)
     public boolean deleteCard(int cardId) {
-        String sql = "DELETE FROM cards WHERE card_id = ?";
+        // Check if card has transactions first
+        if (hasTransactions(cardId)) {
+            // Soft delete - deactivate card
+            return deactivateCard(cardId);
+        } else {
+            // Hard delete - remove completely
+            String deleteSql = "DELETE FROM cards WHERE card_id = ?";
+            
+            try (Connection conn = dbConnection.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(deleteSql)) {
+                
+                pstmt.setInt(1, cardId);
+                return pstmt.executeUpdate() > 0;
+            } catch (SQLException e) {
+                System.err.println("Error deleting card: " + e.getMessage());
+            }
+        }
+        return false;
+    }
+    
+    // Helper method to check if card has transactions
+    private boolean hasTransactions(int cardId) {
+        String sql = "SELECT COUNT(*) FROM transactions WHERE card_id = ?";
         
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setInt(1, cardId);
-            return pstmt.executeUpdate() > 0;
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
         } catch (SQLException e) {
-            System.err.println("Error deleting card: " + e.getMessage());
+            System.err.println("Error checking card transactions: " + e.getMessage());
         }
         return false;
     }
@@ -253,40 +262,7 @@ public class CardDAO {
         return getActiveCardCount(userId) < 5;
     }
     
-    // UPDATE - Update card balance
-    public boolean updateCardBalance(int cardId, BigDecimal newBalance) {
-        String sql = "UPDATE cards SET balance = ? WHERE card_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setBigDecimal(1, newBalance);
-            pstmt.setInt(2, cardId);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating card balance: " + e.getMessage());
-        }
-        return false;
-    }
-    
-    // READ - Get card balance
-    public BigDecimal getCardBalance(int cardId) {
-        String sql = "SELECT balance FROM cards WHERE card_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, cardId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getBigDecimal("balance");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting card balance: " + e.getMessage());
-        }
-        return BigDecimal.ZERO;
-    }
+
     
     // Helper method to map ResultSet to Card object
     private Card mapResultSetToCard(ResultSet rs) throws SQLException {

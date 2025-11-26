@@ -68,9 +68,7 @@ public class WalletService {
         
         addFundsInternal(userId, amount, source);
         
-        // Deduct from card balance
-        BigDecimal newCardBalance = card.getBalance().subtract(amount);
-        cardDAO.updateCardBalance(cardId, newCardBalance);
+        // Note: Card balance updates removed - using wallet-only approach
     }
     
     /**
@@ -127,9 +125,7 @@ public class WalletService {
         
         withdrawFundsInternal(userId, amount, destination);
         
-        // Add to card balance
-        BigDecimal newCardBalance = card.getBalance().add(amount);
-        cardDAO.updateCardBalance(cardId, newCardBalance);
+        // Note: Card balance updates removed - using wallet-only approach
     }
     
     /**
@@ -233,23 +229,7 @@ public class WalletService {
         return walletDAO.getBalance(userId);
     }
     
-    /**
-     * Update wallet currency
-     */
-    public void updateCurrency(int userId, Currency currency) throws NFCPayException {
-        ValidationService.validateNotNull(currency, "Currency");
-        
-        Wallet wallet = getWallet(userId);
-        
-        if (wallet.getCurrency() == currency) {
-            throw new ValidationException("Wallet is already in " + currency + " currency");
-        }
-        
-        boolean updated = walletDAO.updateCurrency(userId, currency);
-        if (!updated) {
-            throw new ValidationException("Failed to update wallet currency");
-        }
-    }
+
     
     /**
      * Validate wallet for transaction

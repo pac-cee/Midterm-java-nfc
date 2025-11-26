@@ -12,14 +12,12 @@ public class MainController {
     private final CardController cardController;
     private final WalletController walletController;
     private final PaymentController paymentController;
-    private final MerchantController merchantController;
     
     public MainController() {
         this.authController = new AuthController();
         this.cardController = new CardController();
         this.walletController = new WalletController();
         this.paymentController = new PaymentController();
-        this.merchantController = new MerchantController();
     }
     
     // Getter methods for accessing individual controllers
@@ -39,9 +37,7 @@ public class MainController {
         return paymentController;
     }
     
-    public MerchantController getMerchantController() {
-        return merchantController;
-    }
+
     
     // Common application operations
     public boolean isUserLoggedIn() {

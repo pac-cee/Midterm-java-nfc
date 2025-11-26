@@ -179,19 +179,7 @@ public class PaymentService {
         return refundTransaction;
     }
     
-    /**
-     * Get spending analytics
-     */
-    public BigDecimal getMonthlySpending(int userId, int year, int month) throws NFCPayException {
-        ValidationService.validatePositiveInteger(userId, "User ID");
-        ValidationService.validateRange(year, "Year", 2020, 2030);
-        ValidationService.validateRange(month, "Month", 1, 12);
-        
-        // Calculate monthly spending using date range
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-        return transactionDAO.getTotalSpent(userId, startDate, endDate);
-    }
+
     
     /**
      * Check if payment amount is within limits
@@ -214,5 +202,12 @@ public class PaymentService {
                 String.format("Daily limit exceeded. Limit: $%.2f, Already spent: $%.2f", 
                     dailyLimit, dailySpent));
         }
+    }
+    
+    /**
+     * Get active merchants for payment selection
+     */
+    public List<Merchant> getActiveMerchants() throws NFCPayException {
+        return merchantDAO.getActiveMerchants();
     }
 }

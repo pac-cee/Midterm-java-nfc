@@ -85,23 +85,7 @@ public class UserDAO {
         return null;
     }
     
-    // READ - Get all users (for admin functionality)
-    public List<User> getAllUsers() {
-        String sql = "SELECT * FROM users ORDER BY created_at DESC";
-        List<User> users = new ArrayList<>();
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting all users: " + e.getMessage());
-        }
-        return users;
-    }
+
     
     // UPDATE - Update user information
     public boolean updateUser(User user) {
@@ -154,20 +138,7 @@ public class UserDAO {
         return false;
     }
     
-    // DELETE - Deactivate user (soft delete)
-    public boolean deleteUser(int userId) {
-        String sql = "UPDATE users SET is_active = false WHERE user_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, userId);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error deactivating user: " + e.getMessage());
-        }
-        return false;
-    }
+
     
     // VALIDATION - Check if email exists
     public boolean emailExists(String email) {
@@ -188,25 +159,7 @@ public class UserDAO {
         return false;
     }
     
-    // AUTHENTICATION - Authenticate user for login
-    public User authenticateUser(String email, String passwordHash) {
-        String sql = "SELECT * FROM users WHERE email = ? AND password_hash = ? AND is_active = true";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, email.toLowerCase());
-            pstmt.setString(2, passwordHash);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error authenticating user: " + e.getMessage());
-        }
-        return null;
-    }
+
     
     // Helper method to map ResultSet to User object
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

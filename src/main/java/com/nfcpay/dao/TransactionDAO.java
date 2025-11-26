@@ -118,188 +118,32 @@ public class TransactionDAO {
         return transactions;
     }
     
-    // READ - Get transactions by card ID
-    public List<Transaction> getTransactionsByCardId(int cardId) {
-        String sql = "SELECT * FROM transactions WHERE card_id = ? ORDER BY created_at DESC";
-        List<Transaction> transactions = new ArrayList<>();
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, cardId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                transactions.add(mapResultSetToTransaction(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting transactions by card ID: " + e.getMessage());
-        }
-        return transactions;
-    }
+
     
-    // READ - Get transactions by merchant ID
-    public List<Transaction> getTransactionsByMerchantId(int merchantId) {
-        String sql = "SELECT * FROM transactions WHERE merchant_id = ? ORDER BY created_at DESC";
-        List<Transaction> transactions = new ArrayList<>();
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, merchantId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                transactions.add(mapResultSetToTransaction(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting transactions by merchant ID: " + e.getMessage());
-        }
-        return transactions;
-    }
+
     
-    // READ - Get transactions by status
-    public List<Transaction> getTransactionsByStatus(int userId, TransactionStatus status) {
-        String sql = "SELECT * FROM transactions WHERE user_id = ? AND status = ? ORDER BY created_at DESC";
-        List<Transaction> transactions = new ArrayList<>();
+
+    
+    // ANALYTICS - Get daily spending for user
+    public BigDecimal getDailySpent(int userId) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = ? AND status = 'SUCCESS' AND DATE(created_at) = CURRENT_DATE";
         
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setInt(1, userId);
-            pstmt.setString(2, status.toString());
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                transactions.add(mapResultSetToTransaction(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting transactions by status: " + e.getMessage());
-        }
-        return transactions;
-    }
-    
-    // READ - Get transactions by date range
-    public List<Transaction> getTransactionsByDateRange(int userId, LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT * FROM transactions WHERE user_id = ? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC";
-        List<Transaction> transactions = new ArrayList<>();
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, userId);
-            pstmt.setDate(2, Date.valueOf(startDate));
-            pstmt.setDate(3, Date.valueOf(endDate));
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                transactions.add(mapResultSetToTransaction(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting transactions by date range: " + e.getMessage());
-        }
-        return transactions;
-    }
-    
-    // READ - Search transactions by description or reference
-    public List<Transaction> searchTransactions(int userId, String searchTerm) {
-        String sql = "SELECT * FROM transactions WHERE user_id = ? AND (description ILIKE ? OR reference_code ILIKE ?) ORDER BY created_at DESC";
-        List<Transaction> transactions = new ArrayList<>();
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            String searchPattern = "%" + searchTerm + "%";
-            pstmt.setInt(1, userId);
-            pstmt.setString(2, searchPattern);
-            pstmt.setString(3, searchPattern);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                transactions.add(mapResultSetToTransaction(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error searching transactions: " + e.getMessage());
-        }
-        return transactions;
-    }
-    
-    // UPDATE - Update transaction status
-    public boolean updateTransactionStatus(int transactionId, TransactionStatus status) {
-        String sql = "UPDATE transactions SET status = ?, processed_at = CURRENT_TIMESTAMP WHERE transaction_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, status.toString());
-            pstmt.setInt(2, transactionId);
-            
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating transaction status: " + e.getMessage());
-        }
-        return false;
-    }
-    
-    // DELETE - Delete transaction (rarely used)
-    public boolean deleteTransaction(int transactionId) {
-        String sql = "DELETE FROM transactions WHERE transaction_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, transactionId);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error deleting transaction: " + e.getMessage());
-        }
-        return false;
-    }
-    
-    // ANALYTICS - Get total spent by user in date range
-    public BigDecimal getTotalSpent(int userId, LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = ? AND status = 'SUCCESS' AND DATE(created_at) BETWEEN ? AND ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, userId);
-            pstmt.setDate(2, Date.valueOf(startDate));
-            pstmt.setDate(3, Date.valueOf(endDate));
             ResultSet rs = pstmt.executeQuery();
             
             if (rs.next()) {
                 return rs.getBigDecimal(1);
             }
         } catch (SQLException e) {
-            System.err.println("Error getting total spent: " + e.getMessage());
+            System.err.println("Error getting daily spent: " + e.getMessage());
         }
         return BigDecimal.ZERO;
     }
     
-    // ANALYTICS - Get daily spending for user
-    public BigDecimal getDailySpent(int userId) {
-        return getTotalSpent(userId, LocalDate.now(), LocalDate.now());
-    }
-    
-    // VALIDATION - Check if reference code exists
-    public boolean referenceCodeExists(String referenceCode) {
-        String sql = "SELECT COUNT(*) FROM transactions WHERE reference_code = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, referenceCode);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error checking reference code existence: " + e.getMessage());
-        }
-        return false;
-    }
+
     
     // Helper method to map ResultSet to Transaction object
     private Transaction mapResultSetToTransaction(ResultSet rs) throws SQLException {

@@ -35,11 +35,13 @@ public class PaymentController {
         return paymentService.refundPayment(transactionId, userId, reason);
     }
     
-    public BigDecimal getMonthlySpending(int userId, int year, int month) throws NFCPayException {
-        return paymentService.getMonthlySpending(userId, year, month);
-    }
+
     
     public void validatePaymentLimits(int userId, BigDecimal amount) throws NFCPayException {
         paymentService.validatePaymentLimits(userId, amount);
+    }
+    
+    public List<com.nfcpay.model.Merchant> getActiveMerchants() throws NFCPayException {
+        return paymentService.getActiveMerchants();
     }
 }

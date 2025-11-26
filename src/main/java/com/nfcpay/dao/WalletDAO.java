@@ -65,24 +65,7 @@ public class WalletDAO {
         return null;
     }
     
-    // READ - Get wallet by wallet ID
-    public Wallet getWalletById(int walletId) {
-        String sql = "SELECT * FROM wallets WHERE wallet_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, walletId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return mapResultSetToWallet(rs);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting wallet by ID: " + e.getMessage());
-        }
-        return null;
-    }
+
     
     // READ - Get current balance
     public BigDecimal getBalance(int userId) {
@@ -103,22 +86,7 @@ public class WalletDAO {
         return BigDecimal.ZERO;
     }
     
-    // UPDATE - Update wallet balance
-    public boolean updateBalance(int userId, BigDecimal newBalance) {
-        String sql = "UPDATE wallets SET balance = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setBigDecimal(1, newBalance);
-            pstmt.setInt(2, userId);
-            
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating balance: " + e.getMessage());
-        }
-        return false;
-    }
+
     
     // UPDATE - Add funds to wallet
     public boolean addFunds(int userId, BigDecimal amount) {
@@ -155,37 +123,7 @@ public class WalletDAO {
         return false;
     }
     
-    // UPDATE - Change currency
-    public boolean updateCurrency(int userId, Currency currency) {
-        String sql = "UPDATE wallets SET currency = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, currency.toString());
-            pstmt.setInt(2, userId);
-            
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating currency: " + e.getMessage());
-        }
-        return false;
-    }
-    
-    // DELETE - Delete wallet (cascade will handle this)
-    public boolean deleteWallet(int walletId) {
-        String sql = "DELETE FROM wallets WHERE wallet_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, walletId);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error deleting wallet: " + e.getMessage());
-        }
-        return false;
-    }
+
     
     // VALIDATION - Check if user has sufficient balance
     public boolean hasSufficientBalance(int userId, BigDecimal amount) {
@@ -205,24 +143,7 @@ public class WalletDAO {
         return false;
     }
     
-    // VALIDATION - Check if wallet exists for user
-    public boolean walletExists(int userId) {
-        String sql = "SELECT COUNT(*) FROM wallets WHERE user_id = ?";
-        
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, userId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error checking wallet existence: " + e.getMessage());
-        }
-        return false;
-    }
+
     
     // Helper method to map ResultSet to Wallet object
     private Wallet mapResultSetToWallet(ResultSet rs) throws SQLException {

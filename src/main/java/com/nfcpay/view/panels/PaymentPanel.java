@@ -248,7 +248,7 @@ public class PaymentPanel extends JPanel {
             
             // Load merchants
             try {
-                List<Merchant> merchants = mainController.getMerchantController().getAllMerchants();
+                List<Merchant> merchants = mainController.getPaymentController().getActiveMerchants();
                 merchantComboBox.removeAllItems();
                 for (Merchant merchant : merchants) {
                     merchantComboBox.addItem(merchant);

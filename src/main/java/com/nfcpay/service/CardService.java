@@ -141,14 +141,14 @@ public class CardService {
     }
     
     /**
-     * Delete card
+     * Delete card (deactivates if has transactions)
      */
     public void deleteCard(int cardId, int userId) throws NFCPayException {
         validateCardOwnership(cardId, userId);
         
         boolean deleted = cardDAO.deleteCard(cardId);
         if (!deleted) {
-            throw new ValidationException("Failed to delete card");
+            throw new ValidationException("Failed to remove card");
         }
     }
     

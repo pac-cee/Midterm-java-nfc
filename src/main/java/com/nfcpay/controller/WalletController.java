@@ -49,9 +49,7 @@ public class WalletController {
         return walletService.getBalance(userId);
     }
     
-    public void updateCurrency(int userId, Currency currency) throws NFCPayException {
-        walletService.updateCurrency(userId, currency);
-    }
+
     
     public void validateWalletForTransaction(int userId, BigDecimal amount) throws NFCPayException {
         walletService.validateWalletForTransaction(userId, amount);
