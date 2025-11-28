@@ -5,6 +5,7 @@ import com.nfcpay.model.Wallet;
 import com.nfcpay.model.Transaction;
 import com.nfcpay.util.Session;
 import com.nfcpay.util.UIUtils;
+import com.nfcpay.view.components.CustomButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +19,7 @@ public class DashboardPanel extends JPanel {
     private final MainController mainController;
     private JLabel balanceLabel;
     private JLabel cardCountLabel;
+    private JLabel paymentsLabel;
     private JTable recentTransactionsTable;
     
     public DashboardPanel(MainController mainController) {
@@ -28,72 +30,64 @@ public class DashboardPanel extends JPanel {
     
     private void initializeComponents() {
         balanceLabel = new JLabel("$0.00");
-        balanceLabel.setFont(new Font("SansSerif", Font.BOLD, 32));
-        balanceLabel.setForeground(new Color(40, 167, 69));
+        balanceLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
         
         cardCountLabel = new JLabel("0 Cards");
-        cardCountLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
-        cardCountLabel.setForeground(Color.WHITE);
+        cardCountLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
         
         recentTransactionsTable = new JTable();
         recentTransactionsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        recentTransactionsTable.setFont(UIUtils.FONT_BODY);
     }
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(new Color(33, 37, 41));
+        setBackground(UIUtils.getBackgroundColor());
         
-        // Header with gradient
-        JPanel headerPanel = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                GradientPaint gradient = new GradientPaint(0, 0, new Color(46, 204, 113), 
-                                                         getWidth(), 0, new Color(39, 174, 96));
-                g2d.setPaint(gradient);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+        // Professional header
+        JPanel headerPanel = UIUtils.createHeaderPanel("📊 Dashboard");
         
-        JLabel titleLabel = new JLabel("📊 Dashboard");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        titleLabel.setForeground(Color.WHITE);
-        headerPanel.add(titleLabel, BorderLayout.WEST);
+        // Add refresh button to header
+        JButton refreshButton = new CustomButton("🔄 Refresh", CustomButton.ButtonStyle.SECONDARY);
+        refreshButton.addActionListener(e -> refreshData());
+        headerPanel.add(refreshButton, BorderLayout.EAST);
         
-        // Stats Panel
-        JPanel statsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
-        statsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        statsPanel.setBackground(new Color(33, 37, 41));
+        // Professional Stats Panel - 3 cards in a row
+        JPanel statsPanel = new JPanel(new GridLayout(1, 3, UIUtils.SPACING_SM, 0));
+        statsPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, 0, UIUtils.SPACING_MD, 0));
+        statsPanel.setBackground(UIUtils.getBackgroundColor());
         
-        // Balance Card
-        JPanel balanceCard = createStatsCard("Wallet Balance", balanceLabel);
+        // Create professional stat cards
+        paymentsLabel = new JLabel("0 Payments");
+        paymentsLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
         
-        // Cards Card
-        JPanel cardsCard = createStatsCard("Active Cards", cardCountLabel);
+        JPanel balanceCard = createProfessionalStatsCard("💰 Wallet Balance", balanceLabel, UIUtils.SUCCESS);
+        JPanel cardsCard = createProfessionalStatsCard("💳 Active Cards", cardCountLabel, UIUtils.PRIMARY);
+        JPanel paymentsCard = createProfessionalStatsCard("📈 This Month", paymentsLabel, UIUtils.WARNING);
         
         statsPanel.add(balanceCard);
         statsPanel.add(cardsCard);
+        statsPanel.add(paymentsCard);
         
-        // Recent Transactions with modern dark styling
-        JPanel transactionsPanel = new JPanel(new BorderLayout());
-        transactionsPanel.setBackground(new Color(33, 37, 41));
+        // Professional Transactions Panel
+        JPanel transactionsPanel = UIUtils.createCard();
+        transactionsPanel.setLayout(new BorderLayout());
+        transactionsPanel.setBackground(UIUtils.getSurfaceColor());
         
         JLabel transactionsTitle = new JLabel("Recent Transactions");
-        transactionsTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
-        transactionsTitle.setForeground(Color.WHITE);
-        transactionsTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        transactionsTitle.setFont(UIUtils.FONT_HEADING);
+        transactionsTitle.setForeground(UIUtils.getTextColor());
+        transactionsTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, UIUtils.SPACING_SM, 0));
         
-        // Style the table with dark theme
-        recentTransactionsTable.getTableHeader().setBackground(new Color(52, 58, 64));
+        // Professional table styling
+        recentTransactionsTable.getTableHeader().setBackground(UIUtils.PRIMARY);
         recentTransactionsTable.getTableHeader().setForeground(Color.WHITE);
-        recentTransactionsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
-        recentTransactionsTable.setBackground(new Color(33, 37, 41));
-        recentTransactionsTable.setForeground(Color.WHITE);
-        recentTransactionsTable.setGridColor(new Color(52, 58, 64));
-        recentTransactionsTable.setRowHeight(35);
-        recentTransactionsTable.setSelectionBackground(new Color(52, 58, 64));
+        recentTransactionsTable.getTableHeader().setFont(UIUtils.FONT_BODY);
+        recentTransactionsTable.setBackground(UIUtils.getSurfaceColor());
+        recentTransactionsTable.setForeground(UIUtils.getTextColor());
+        recentTransactionsTable.setGridColor(new Color(0xe2e8f0));
+        recentTransactionsTable.setRowHeight(40);
+        recentTransactionsTable.setSelectionBackground(UIUtils.PRIMARY.brighter());
         recentTransactionsTable.setSelectionForeground(Color.WHITE);
         
         JScrollPane scrollPane = new JScrollPane(recentTransactionsTable);
@@ -105,8 +99,8 @@ public class DashboardPanel extends JPanel {
         transactionsPanel.add(scrollPane, BorderLayout.CENTER);
         
         JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(new Color(33, 37, 41));
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+        contentPanel.setBackground(UIUtils.getBackgroundColor());
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD));
         contentPanel.add(statsPanel, BorderLayout.NORTH);
         contentPanel.add(transactionsPanel, BorderLayout.CENTER);
         
@@ -114,23 +108,32 @@ public class DashboardPanel extends JPanel {
         add(contentPanel, BorderLayout.CENTER);
     }
     
-    private JPanel createStatsCard(String title, JLabel valueLabel) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(52, 58, 64)),
-            BorderFactory.createEmptyBorder(25, 25, 25, 25)
-        ));
-        card.setBackground(new Color(52, 58, 64));
+    private JPanel createProfessionalStatsCard(String title, JLabel valueLabel, Color accentColor) {
+        JPanel card = UIUtils.createCard();
+        card.setLayout(new BorderLayout());
+        card.setBackground(UIUtils.getSurfaceColor());
+        
+        // Add colored accent bar at top
+        JPanel accentBar = new JPanel();
+        accentBar.setBackground(accentColor);
+        accentBar.setPreferredSize(new Dimension(0, 4));
         
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        titleLabel.setForeground(new Color(173, 181, 189));
+        titleLabel.setFont(UIUtils.FONT_BODY);
+        titleLabel.setForeground(UIUtils.NEUTRAL);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, UIUtils.SPACING_XS, 0));
         
-        // Update value label colors for dark theme
-        valueLabel.setForeground(Color.WHITE);
+        // Style value label
+        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+        valueLabel.setForeground(accentColor);
         
-        card.add(titleLabel, BorderLayout.NORTH);
-        card.add(valueLabel, BorderLayout.CENTER);
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(UIUtils.getSurfaceColor());
+        contentPanel.add(titleLabel, BorderLayout.NORTH);
+        contentPanel.add(valueLabel, BorderLayout.CENTER);
+        
+        card.add(accentBar, BorderLayout.NORTH);
+        card.add(contentPanel, BorderLayout.CENTER);
         
         return card;
     }
@@ -156,10 +159,17 @@ public class DashboardPanel extends JPanel {
                 cardCountLabel.setText("0 Cards");
             }
             
-            // Get real recent transactions
+            // Get real recent transactions and count this month's payments
             try {
                 List<Transaction> transactions = mainController.getPaymentController().getTransactionHistory(userId);
                 updateTransactionsTable(transactions.subList(0, Math.min(5, transactions.size())));
+                
+                // Count this month's payments
+                long thisMonthPayments = transactions.stream()
+                    .filter(t -> t.getCreatedAt().getMonth() == java.time.LocalDateTime.now().getMonth())
+                    .count();
+                paymentsLabel.setText(thisMonthPayments + " Payments");
+                
             } catch (Exception e) {
                 // Show empty table if no transactions
                 String[] columns = {"Date", "Description", "Amount", "Status"};
@@ -170,6 +180,7 @@ public class DashboardPanel extends JPanel {
                         return false;
                     }
                 });
+                paymentsLabel.setText("0 Payments");
             }
             
             System.out.println("Dashboard data refreshed successfully");

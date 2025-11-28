@@ -5,6 +5,7 @@ import com.nfcpay.model.Card;
 import com.nfcpay.model.enums.CardType;
 import com.nfcpay.util.Session;
 import com.nfcpay.util.NotificationManager;
+import com.nfcpay.util.UIUtils;
 
 import com.nfcpay.view.components.*;
 import com.nfcpay.view.dialogs.ConfirmationDialog;
@@ -19,12 +20,11 @@ import java.util.List;
  */
 public class CardPanel extends JPanel {
     private final MainController mainController;
-    private ModernTable cardTable;
-    private ModernTableModel<Card> tableModel;
-    private SearchPanel searchPanel;
+    private JPanel cardGridPanel;
     private StatusPanel statusPanel;
     private JButton addButton, editButton, deleteButton, toggleStatusButton;
     private List<Card> allCards;
+    private Card selectedCard;
     
     public CardPanel(MainController mainController) {
         this.mainController = mainController;
@@ -34,87 +34,51 @@ public class CardPanel extends JPanel {
     }
     
     private void initializeComponents() {
-        String[] columns = {"ID", "Card Name", "Card Number", "Type", "Status", "Balance"};
-        
-        tableModel = new ModernTableModel<>(columns, card -> new Object[]{
-            card.getCardId(),
-            card.getCardName(),
-            "**** **** **** " + card.getCardUid().substring(Math.max(0, card.getCardUid().length() - 4)),
-            card.getCardType(),
-            card.isActive() ? "Active" : "Inactive",
-            String.format("$%.2f", card.getBalance())
-        });
-        
-        cardTable = new ModernTable(tableModel);
-        searchPanel = new SearchPanel("Search cards by name, type, or status...");
         statusPanel = new StatusPanel();
         
         addButton = new CustomButton("➕ Add Card", CustomButton.ButtonStyle.SUCCESS);
-        editButton = new CustomButton("✏️ Edit Card", CustomButton.ButtonStyle.PRIMARY);
-        deleteButton = new CustomButton("🗑️ Delete Card", CustomButton.ButtonStyle.DANGER);
-        toggleStatusButton = new CustomButton("🔄 Toggle Status", CustomButton.ButtonStyle.WARNING);
+        editButton = new CustomButton("✏️ Edit", CustomButton.ButtonStyle.PRIMARY);
+        deleteButton = new CustomButton("🗑️ Delete", CustomButton.ButtonStyle.DANGER);
+        toggleStatusButton = new CustomButton("🔄 Toggle", CustomButton.ButtonStyle.WARNING);
+        
+        // Initially disable action buttons
+        editButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+        toggleStatusButton.setEnabled(false);
     }
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(new Color(33, 37, 41));
+        setBackground(UIUtils.getBackgroundColor());
         
-        // Header with gradient
-        JPanel headerPanel = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                GradientPaint gradient = new GradientPaint(0, 0, new Color(46, 204, 113), 
-                                                         getWidth(), 0, new Color(39, 174, 96));
-                g2d.setPaint(gradient);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-        
-        JLabel titleLabel = new JLabel("💳 Card Management");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        titleLabel.setForeground(Color.WHITE);
-        
-        headerPanel.add(titleLabel, BorderLayout.WEST);
+        // Professional header
+        JPanel headerPanel = UIUtils.createHeaderPanel("💳 My Cards");
         headerPanel.add(addButton, BorderLayout.EAST);
         
-        // Remove search panel - not needed for cards
+        // Professional card grid instead of table
+        JPanel cardGridPanel = new JPanel(new GridLayout(0, 3, UIUtils.SPACING_SM, UIUtils.SPACING_SM));
+        cardGridPanel.setBackground(UIUtils.getBackgroundColor());
+        cardGridPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD));
         
-        // Style table for dark theme
-        cardTable.setBackground(new Color(33, 37, 41));
-        cardTable.setForeground(Color.WHITE);
-        cardTable.getTableHeader().setBackground(new Color(52, 58, 64));
-        cardTable.getTableHeader().setForeground(Color.WHITE);
-        cardTable.setGridColor(new Color(52, 58, 64));
-        cardTable.setSelectionBackground(new Color(52, 58, 64));
-        cardTable.setSelectionForeground(Color.WHITE);
-        
-        // Table container
-        JScrollPane scrollPane = new JScrollPane(cardTable);
+        JScrollPane scrollPane = new JScrollPane(cardGridPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(new Color(33, 37, 41));
-        scrollPane.setBackground(new Color(33, 37, 41));
+        scrollPane.getViewport().setBackground(UIUtils.getBackgroundColor());
+        scrollPane.setBackground(UIUtils.getBackgroundColor());
         
-        JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(new Color(33, 37, 41));
-        tableContainer.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
-        tableContainer.add(scrollPane, BorderLayout.CENTER);
+        this.cardGridPanel = cardGridPanel; // Store reference for refreshData
         
         // Action buttons panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        buttonPanel.setBackground(new Color(33, 37, 41));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
-        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, UIUtils.SPACING_SM, 0));
+        buttonPanel.setBackground(UIUtils.getBackgroundColor());
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_SM, 0, UIUtils.SPACING_SM, 0));
         buttonPanel.add(editButton);
         buttonPanel.add(toggleStatusButton);
-        buttonPanel.add(Box.createHorizontalStrut(20));
         buttonPanel.add(deleteButton);
         
         // Main content
         JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.add(tableContainer, BorderLayout.CENTER);
+        contentPanel.setBackground(UIUtils.getBackgroundColor());
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         add(headerPanel, BorderLayout.NORTH);
@@ -131,8 +95,7 @@ public class CardPanel extends JPanel {
         deleteButton.addActionListener(this::handleDeleteCard);
         toggleStatusButton.addActionListener(this::handleToggleStatus);
         
-        // Table selection
-        cardTable.getSelectionModel().addListSelectionListener(e -> updateButtonStates());
+        // No table selection needed for card grid
     }
     
     private void handleAddCard(ActionEvent e) {
@@ -150,11 +113,9 @@ public class CardPanel extends JPanel {
     }
     
     private void handleEditCard(ActionEvent e) {
-        int selectedRow = cardTable.getSelectedRow();
-        if (selectedRow == -1) return;
+        if (selectedCard == null) return;
         
         try {
-            Card selectedCard = tableModel.getItemAt(selectedRow);
             String currentName = selectedCard.getCardName();
             
             String newName = JOptionPane.showInputDialog(this, "Enter new card name:", currentName);
@@ -171,13 +132,8 @@ public class CardPanel extends JPanel {
     }
     
     private void handleToggleStatus(ActionEvent e) {
-        int selectedRow = cardTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Please select a card to toggle status", "Warning", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        if (selectedCard == null) return;
         
-        Card selectedCard = tableModel.getItemAt(selectedRow);
         String action = selectedCard.isActive() ? "deactivate" : "activate";
         
         if (JOptionPane.showConfirmDialog(this, 
@@ -186,7 +142,6 @@ public class CardPanel extends JPanel {
             try {
                 statusPanel.showProgress("Updating card status...", 50);
                 
-                // FIX: Call the correct activate/deactivate methods
                 if (selectedCard.isActive()) {
                     mainController.getCardController().deactivateCard(selectedCard.getCardId(), 
                         Session.getCurrentUser().getUserId());
@@ -197,6 +152,7 @@ public class CardPanel extends JPanel {
                 
                 statusPanel.showProgress("Status updated", 100);
                 JOptionPane.showMessageDialog(this, "Card status updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                selectedCard = null; // Clear selection
                 refreshData();
                 
             } catch (Exception ex) {
@@ -207,10 +163,7 @@ public class CardPanel extends JPanel {
     }
     
     private void handleDeleteCard(ActionEvent e) {
-        int selectedRow = cardTable.getSelectedRow();
-        if (selectedRow == -1) return;
-        
-        Card selectedCard = tableModel.getItemAt(selectedRow);
+        if (selectedCard == null) return;
         
         if (ConfirmationDialog.showConfirmation(this, "Delete Card", 
             "Are you sure you want to delete the card '" + selectedCard.getCardName() + "'?", 
@@ -223,6 +176,7 @@ public class CardPanel extends JPanel {
                 statusPanel.showProgress("Card deleted", 100);
                 
                 JOptionPane.showMessageDialog(this, "Card deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                selectedCard = null; // Clear selection
                 refreshData();
                 
             } catch (Exception ex) {
@@ -233,16 +187,13 @@ public class CardPanel extends JPanel {
     }
     
     private void updateButtonStates() {
-        boolean hasSelection = cardTable.getSelectedRow() != -1;
+        boolean hasSelection = selectedCard != null;
         editButton.setEnabled(hasSelection);
         deleteButton.setEnabled(hasSelection);
         toggleStatusButton.setEnabled(hasSelection);
         
         if (hasSelection) {
-            Card selectedCard = tableModel.getItemAt(cardTable.getSelectedRow());
             toggleStatusButton.setText(selectedCard.isActive() ? "🔴 Deactivate" : "🟢 Activate");
-            statusPanel.showStatus("Card selected: " + selectedCard.getCardName(), 
-                                 StatusPanel.StatusType.INFO);
         }
     }
     
@@ -261,8 +212,7 @@ public class CardPanel extends JPanel {
             protected void done() {
                 try {
                     allCards = get();
-                    tableModel.setData(allCards);
-                    updateButtonStates();
+                    updateCardGrid();
                     
                     long activeCards = allCards.stream().mapToLong(card -> card.isActive() ? 1 : 0).sum();
                     double totalBalance = allCards.stream().mapToDouble(card -> card.getBalance().doubleValue()).sum();
@@ -282,25 +232,108 @@ public class CardPanel extends JPanel {
         worker.execute();
     }
     
-    private void performSearch() {
-        String searchText = searchPanel.getSearchText().toLowerCase();
+    private void updateCardGrid() {
+        cardGridPanel.removeAll();
         
-        if (searchText.isEmpty()) {
-            tableModel.clearFilter();
-            statusPanel.showStatus("Showing all cards", StatusPanel.StatusType.INFO);
-            return;
+        for (Card card : allCards) {
+            JPanel cardComponent = createCardComponent(card);
+            cardGridPanel.add(cardComponent);
         }
         
-        tableModel.filter(card -> {
-            return card.getCardName().toLowerCase().contains(searchText) ||
-                   card.getCardType().toString().toLowerCase().contains(searchText) ||
-                   (card.isActive() ? "active" : "inactive").contains(searchText);
+        cardGridPanel.revalidate();
+        cardGridPanel.repaint();
+    }
+    
+    private JPanel createCardComponent(Card card) {
+        JPanel cardPanel = UIUtils.createCard();
+        cardPanel.setLayout(new BorderLayout());
+        cardPanel.setBackground(UIUtils.getSurfaceColor());
+        cardPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Card header with type icon
+        JLabel typeLabel = new JLabel(getCardIcon(card.getCardType()) + " " + card.getCardType());
+        typeLabel.setFont(UIUtils.FONT_SMALL);
+        typeLabel.setForeground(UIUtils.NEUTRAL);
+        
+        // Card name
+        JLabel nameLabel = new JLabel(card.getCardName());
+        nameLabel.setFont(UIUtils.FONT_HEADING);
+        nameLabel.setForeground(UIUtils.getTextColor());
+        
+        // Card number (masked)
+        JLabel numberLabel = new JLabel("**** **** **** " + card.getCardUid().substring(Math.max(0, card.getCardUid().length() - 4)));
+        numberLabel.setFont(UIUtils.FONT_BODY);
+        numberLabel.setForeground(UIUtils.NEUTRAL);
+        
+        // Balance
+        JLabel balanceLabel = new JLabel(String.format("$%.2f", card.getBalance()));
+        balanceLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        balanceLabel.setForeground(UIUtils.SUCCESS);
+        
+        // Status indicator
+        JLabel statusLabel = new JLabel(card.isActive() ? "🟢 Active" : "🔴 Inactive");
+        statusLabel.setFont(UIUtils.FONT_SMALL);
+        statusLabel.setForeground(card.isActive() ? UIUtils.SUCCESS : UIUtils.DANGER);
+        
+        // Layout
+        JPanel infoPanel = new JPanel(new GridLayout(5, 1, 0, UIUtils.SPACING_XS));
+        infoPanel.setBackground(UIUtils.getSurfaceColor());
+        infoPanel.add(typeLabel);
+        infoPanel.add(nameLabel);
+        infoPanel.add(numberLabel);
+        infoPanel.add(balanceLabel);
+        infoPanel.add(statusLabel);
+        
+        cardPanel.add(infoPanel, BorderLayout.CENTER);
+        
+        // Click handler
+        cardPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                selectCard(card, cardPanel);
+            }
         });
         
-        int filteredCount = tableModel.getFilteredData().size();
-        statusPanel.showStatus("Found " + filteredCount + " matching cards", 
-                             StatusPanel.StatusType.SUCCESS);
+        return cardPanel;
     }
+    
+    private String getCardIcon(CardType cardType) {
+        switch (cardType) {
+            case PHYSICAL: return "💳";
+            case VIRTUAL: return "📱";
+            default: return "💳";
+        }
+    }
+    
+    private void selectCard(Card card, JPanel cardPanel) {
+        // Clear previous selection
+        if (selectedCard != null) {
+            for (Component comp : cardGridPanel.getComponents()) {
+                if (comp instanceof JPanel) {
+                    ((JPanel)comp).setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(0xe2e8f0), 1),
+                        BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD)
+                    ));
+                }
+            }
+        }
+        
+        // Select new card
+        selectedCard = card;
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIUtils.PRIMARY, 2),
+            BorderFactory.createEmptyBorder(UIUtils.SPACING_MD-2, UIUtils.SPACING_MD-2, UIUtils.SPACING_MD-2, UIUtils.SPACING_MD-2)
+        ));
+        
+        // Update status message
+        statusPanel.showStatus("Selected: " + card.getCardName() + " - $" + String.format("%.2f", card.getBalance()), StatusPanel.StatusType.INFO);
+        
+        updateButtonStates();
+    }
+    
+
+    
+    // Search functionality removed for card grid layout
     
     private void handleAddCardDialog() {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Card", true);

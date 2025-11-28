@@ -1,5 +1,6 @@
 package com.nfcpay.view.components;
 
+import com.nfcpay.util.UIUtils;
 import javax.swing.*;
 import java.awt.*;
 
@@ -33,7 +34,8 @@ public class CustomButton extends JButton {
         setForeground(Color.WHITE);
         setFocusPainted(false);
         setBorderPainted(false);
-        setFont(new Font("SansSerif", Font.BOLD, 14));
+        setFont(UIUtils.FONT_BODY);
+        setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_XS, UIUtils.SPACING_SM, UIUtils.SPACING_XS, UIUtils.SPACING_SM));
         setCursor(new Cursor(Cursor.HAND_CURSOR));
         setPreferredSize(new Dimension(140, 45));
         
@@ -58,38 +60,42 @@ public class CustomButton extends JButton {
     }
     
     public static CustomButton createPrimaryButton(String text) {
-        return new CustomButton(text, new Color(0, 123, 255));
+        return new CustomButton(text, ButtonStyle.PRIMARY);
     }
     
     public static CustomButton createSuccessButton(String text) {
-        return new CustomButton(text, new Color(40, 167, 69));
+        return new CustomButton(text, ButtonStyle.SUCCESS);
     }
     
     public static CustomButton createDangerButton(String text) {
-        return new CustomButton(text, new Color(220, 53, 69));
+        return new CustomButton(text, ButtonStyle.DANGER);
     }
     
     public static CustomButton createSecondaryButton(String text) {
-        return new CustomButton(text, new Color(108, 117, 125));
+        return new CustomButton(text, ButtonStyle.SECONDARY);
+    }
+    
+    public static CustomButton createWarningButton(String text) {
+        return new CustomButton(text, ButtonStyle.WARNING);
     }
     
     private void applyStyle(ButtonStyle style) {
         switch (style) {
             case PRIMARY:
-                setBackground(new Color(0, 123, 255));
+                setBackground(UIUtils.PRIMARY);
                 break;
             case SUCCESS:
-                setBackground(new Color(40, 167, 69));
+                setBackground(UIUtils.SUCCESS);
                 break;
             case DANGER:
-                setBackground(new Color(220, 53, 69));
+                setBackground(UIUtils.DANGER);
                 break;
             case WARNING:
-                setBackground(new Color(255, 193, 7));
+                setBackground(UIUtils.WARNING);
                 setForeground(Color.BLACK);
                 break;
             case SECONDARY:
-                setBackground(new Color(108, 117, 125));
+                setBackground(UIUtils.NEUTRAL);
                 break;
         }
     }

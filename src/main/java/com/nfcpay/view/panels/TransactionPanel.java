@@ -20,10 +20,17 @@ public class TransactionPanel extends JPanel {
     private ModernTable transactionTable;
     private ModernTableModel<Transaction> tableModel;
     private SearchPanel searchPanel;
-    private PaginationPanel paginationPanel;
     private StatusPanel statusPanel;
     private JButton refundButton;
+    private JComboBox<String> typeFilter, dateFilter, cardFilter;
+    private CustomButton exportBtn;
+    private JLabel paginationInfo, pageLabel;
+    private JButton prevBtn, nextBtn;
     private List<Transaction> allTransactions;
+    private List<Transaction> filteredTransactions;
+    private int currentPage = 1;
+    private int itemsPerPage = 10;
+    private int totalPages = 0;
     
     public TransactionPanel(MainController mainController) {
         this.mainController = mainController;
@@ -33,146 +40,225 @@ public class TransactionPanel extends JPanel {
     }
     
     private void initializeComponents() {
-        String[] columns = {"ID", "Date", "Description", "Amount", "Type", "Status"};
+        String[] columns = {"Date", "Time", "Merchant", "Amount", "Status", "Card", "Receipt"};
         
         tableModel = new ModernTableModel<>(columns, transaction -> new Object[]{
-            transaction.getTransactionId(),
             transaction.getCreatedAt().toLocalDate(),
+            transaction.getCreatedAt().toLocalTime().toString().substring(0, 5),
             transaction.getDescription(),
             String.format("$%.2f", transaction.getAmount()),
-            transaction.getTransactionType(),
-            transaction.getStatus()
+            transaction.getStatus() + (transaction.getStatus().toString().equals("SUCCESS") ? " ✅" : " ❌"),
+            "Visa", // TODO: Get actual card name
+            "📄"
         });
         
         transactionTable = new ModernTable(tableModel);
-        searchPanel = new SearchPanel("Search by description, amount, or status...");
-        paginationPanel = new PaginationPanel();
+        searchPanel = new SearchPanel("🔍 Search transactions...");
+
         statusPanel = new StatusPanel();
-        refundButton = new CustomButton("💰 Request Refund", CustomButton.ButtonStyle.DANGER);
+        refundButton = new CustomButton("💰 Refund", CustomButton.ButtonStyle.DANGER);
     }
     
     private void setupLayout() {
         setLayout(new BorderLayout());
-        setBackground(new Color(33, 37, 41));
+        setBackground(UIUtils.getBackgroundColor());
         
-        // Header with gradient
-        JPanel headerPanel = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                GradientPaint gradient = new GradientPaint(0, 0, new Color(46, 204, 113), 
-                                                         getWidth(), 0, new Color(39, 174, 96));
-                g2d.setPaint(gradient);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+        // Professional header
+        JPanel headerPanel = UIUtils.createHeaderPanel("📋 Transaction History");
         
-        JLabel titleLabel = new JLabel("💳 Transaction History");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        titleLabel.setForeground(Color.WHITE);
+        // Search and filters panel
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(UIUtils.getBackgroundColor());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_SM, UIUtils.SPACING_MD, UIUtils.SPACING_SM, UIUtils.SPACING_MD));
         
-        CustomButton refreshButton = new CustomButton("🔄 Refresh", CustomButton.ButtonStyle.SUCCESS);
-        refreshButton.addActionListener(e -> refreshData());
+        // Search panel on top
+        JPanel searchContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        searchContainer.setBackground(UIUtils.getBackgroundColor());
+        searchContainer.add(searchPanel);
         
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-        headerPanel.add(refreshButton, BorderLayout.EAST);
+        // Enhanced filters panel with better alignment
+        JPanel filtersPanel = new JPanel(new BorderLayout());
+        filtersPanel.setBackground(UIUtils.getBackgroundColor());
         
-        // Search container
-        JPanel searchContainer = new JPanel(new BorderLayout());
-        searchContainer.setBackground(new Color(33, 37, 41));
-        searchContainer.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
-        searchContainer.add(searchPanel, BorderLayout.CENTER);
+        JPanel leftFilters = new JPanel(new FlowLayout(FlowLayout.LEFT, UIUtils.SPACING_SM, 0));
+        leftFilters.setBackground(UIUtils.getBackgroundColor());
         
-        // Style table for dark theme
-        transactionTable.setBackground(new Color(33, 37, 41));
-        transactionTable.setForeground(Color.WHITE);
-        transactionTable.getTableHeader().setBackground(new Color(52, 58, 64));
+        JLabel filtersLabel = new JLabel("🔍 Filters:");
+        filtersLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        filtersLabel.setForeground(UIUtils.getTextColor());
+        
+        typeFilter = new JComboBox<>(new String[]{"All Types", "PAYMENT", "REFUND", "TRANSFER"});
+        dateFilter = new JComboBox<>(new String[]{"All Time", "Today", "This Week", "This Month"});
+        cardFilter = new JComboBox<>(new String[]{"All Cards", "PHYSICAL", "VIRTUAL"});
+        
+        // Style filter dropdowns
+        Dimension filterSize = new Dimension(120, 35);
+        typeFilter.setPreferredSize(filterSize);
+        dateFilter.setPreferredSize(filterSize);
+        cardFilter.setPreferredSize(filterSize);
+        
+        leftFilters.add(filtersLabel);
+        leftFilters.add(typeFilter);
+        leftFilters.add(dateFilter);
+        leftFilters.add(cardFilter);
+        
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, UIUtils.SPACING_SM, 0));
+        rightActions.setBackground(UIUtils.getBackgroundColor());
+        
+        exportBtn = new CustomButton("📊 Export CSV", CustomButton.ButtonStyle.SECONDARY);
+        exportBtn.setPreferredSize(new Dimension(130, 35));
+        exportBtn.addActionListener(this::handleExport);
+        
+        rightActions.add(exportBtn);
+        
+        filtersPanel.add(leftFilters, BorderLayout.WEST);
+        filtersPanel.add(rightActions, BorderLayout.EAST);
+        
+        topPanel.add(searchContainer, BorderLayout.NORTH);
+        topPanel.add(filtersPanel, BorderLayout.CENTER);
+        
+        // Professional table styling
+        transactionTable.setBackground(UIUtils.getSurfaceColor());
+        transactionTable.setForeground(UIUtils.getTextColor());
+        transactionTable.getTableHeader().setBackground(UIUtils.PRIMARY);
         transactionTable.getTableHeader().setForeground(Color.WHITE);
-        transactionTable.setGridColor(new Color(52, 58, 64));
-        transactionTable.setSelectionBackground(new Color(52, 58, 64));
+        transactionTable.getTableHeader().setFont(UIUtils.FONT_BODY);
+        transactionTable.setGridColor(new Color(0xe2e8f0));
+        transactionTable.setRowHeight(40);
+        transactionTable.setSelectionBackground(UIUtils.PRIMARY.brighter());
         transactionTable.setSelectionForeground(Color.WHITE);
         
-        // Table container
+        // Professional table container
         JScrollPane scrollPane = new JScrollPane(transactionTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(new Color(33, 37, 41));
-        scrollPane.setBackground(new Color(33, 37, 41));
+        scrollPane.getViewport().setBackground(UIUtils.getSurfaceColor());
+        scrollPane.setBackground(UIUtils.getSurfaceColor());
         
-        JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(new Color(33, 37, 41));
-        tableContainer.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 20));
+        JPanel tableContainer = UIUtils.createCard();
+        tableContainer.setLayout(new BorderLayout());
+        tableContainer.setBackground(UIUtils.getSurfaceColor());
         tableContainer.add(scrollPane, BorderLayout.CENTER);
         
-        // Action panel
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        actionPanel.setBackground(new Color(33, 37, 41));
-        actionPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 20));
-        actionPanel.add(refundButton);
+        // Bottom panel with pagination
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(UIUtils.getBackgroundColor());
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_SM, UIUtils.SPACING_MD, UIUtils.SPACING_SM, UIUtils.SPACING_MD));
         
-        // Pagination container
-        JPanel paginationContainer = new JPanel(new BorderLayout());
-        paginationContainer.setBackground(new Color(33, 37, 41));
-        paginationContainer.setBorder(BorderFactory.createEmptyBorder(0, 20, 10, 20));
-        paginationContainer.add(paginationPanel, BorderLayout.CENTER);
+        // Pagination info
+        paginationInfo = new JLabel("Showing 0-0 of 0 transactions");
+        paginationInfo.setFont(UIUtils.FONT_SMALL);
+        paginationInfo.setForeground(UIUtils.NEUTRAL);
+        
+        // Enhanced pagination controls
+        JPanel paginationControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, UIUtils.SPACING_SM, 0));
+        paginationControls.setBackground(UIUtils.getBackgroundColor());
+        
+        prevBtn = new CustomButton("◀ Previous", CustomButton.ButtonStyle.SECONDARY);
+        prevBtn.setPreferredSize(new Dimension(100, 35));
+        
+        pageLabel = new JLabel("Page 0 of 0");
+        pageLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        pageLabel.setForeground(UIUtils.getTextColor());
+        pageLabel.setBorder(BorderFactory.createEmptyBorder(0, UIUtils.SPACING_SM, 0, UIUtils.SPACING_SM));
+        
+        nextBtn = new CustomButton("Next ▶", CustomButton.ButtonStyle.SECONDARY);
+        nextBtn.setPreferredSize(new Dimension(100, 35));
+        
+        prevBtn.addActionListener(e -> previousPage());
+        nextBtn.addActionListener(e -> nextPage());
+        
+        paginationControls.add(prevBtn);
+        paginationControls.add(pageLabel);
+        paginationControls.add(nextBtn);
+        
+        bottomPanel.add(paginationInfo, BorderLayout.WEST);
+        bottomPanel.add(paginationControls, BorderLayout.EAST);
         
         // Main content
         JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.add(searchContainer, BorderLayout.NORTH);
+        contentPanel.setBackground(UIUtils.getBackgroundColor());
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD));
+        contentPanel.add(topPanel, BorderLayout.NORTH);
         contentPanel.add(tableContainer, BorderLayout.CENTER);
-        
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(actionPanel, BorderLayout.NORTH);
-        bottomPanel.add(paginationContainer, BorderLayout.SOUTH);
+        contentPanel.add(bottomPanel, BorderLayout.SOUTH);
         
         add(headerPanel, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
         add(statusPanel, BorderLayout.PAGE_END);
     }
     
     private void setupEventHandlers() {
         // Search functionality
-        searchPanel.addSearchListener(e -> performSearch());
+        searchPanel.addSearchListener(e -> applyFilters());
         searchPanel.addClearListener(e -> {
             searchPanel.clearSearch();
-            tableModel.clearFilter();
-            statusPanel.showStatus("Filter cleared", StatusPanel.StatusType.INFO);
+            applyFilters();
+            statusPanel.showStatus("Search cleared", StatusPanel.StatusType.INFO);
         });
         
-        // Pagination
-        paginationPanel.addNavigationListeners(
-            e -> paginationPanel.goToFirstPage(),
-            e -> paginationPanel.goToPreviousPage(),
-            e -> paginationPanel.goToNextPage(),
-            e -> paginationPanel.goToLastPage()
-        );
+        // Filter functionality
+        typeFilter.addActionListener(e -> applyFilters());
+        dateFilter.addActionListener(e -> applyFilters());
+        cardFilter.addActionListener(e -> applyFilters());
         
         // Refund button
         refundButton.addActionListener(this::handleRefund);
         transactionTable.getSelectionModel().addListSelectionListener(e -> updateButtonStates());
     }
     
-    private void performSearch() {
+    private void applyFilters() {
+        if (allTransactions == null) return;
+        
         String searchText = searchPanel.getSearchText().toLowerCase();
+        String selectedType = (String) typeFilter.getSelectedItem();
+        String selectedDate = (String) dateFilter.getSelectedItem();
+        String selectedCard = (String) cardFilter.getSelectedItem();
         
-        if (searchText.isEmpty()) {
-            tableModel.clearFilter();
-            statusPanel.showStatus("Showing all transactions", StatusPanel.StatusType.INFO);
-            return;
-        }
+        filteredTransactions = allTransactions.stream()
+            .filter(transaction -> {
+                // Search filter
+                boolean matchesSearch = searchText.isEmpty() || 
+                    transaction.getDescription().toLowerCase().contains(searchText) ||
+                    String.valueOf(transaction.getAmount()).contains(searchText) ||
+                    transaction.getTransactionType().toString().toLowerCase().contains(searchText) ||
+                    transaction.getStatus().toString().toLowerCase().contains(searchText);
+                
+                // Type filter
+                boolean matchesType = "All Types".equals(selectedType) || 
+                    transaction.getTransactionType().toString().equals(selectedType);
+                
+                // Card filter (based on actual card types)
+                boolean matchesCard = "All Cards".equals(selectedCard) || 
+                    selectedCard.equals("PHYSICAL") || selectedCard.equals("VIRTUAL");
+                
+                // Date filter
+                boolean matchesDate = "All Time".equals(selectedDate) || 
+                    checkDateFilter(transaction, selectedDate);
+                
+                return matchesSearch && matchesType && matchesCard && matchesDate;
+            })
+            .collect(java.util.stream.Collectors.toList());
         
-        tableModel.filter(transaction -> {
-            return transaction.getDescription().toLowerCase().contains(searchText) ||
-                   String.valueOf(transaction.getAmount()).contains(searchText) ||
-                   transaction.getTransactionType().toString().toLowerCase().contains(searchText) ||
-                   transaction.getStatus().toString().toLowerCase().contains(searchText);
-        });
-        
-        int filteredCount = tableModel.getFilteredData().size();
-        statusPanel.showStatus("Found " + filteredCount + " matching transactions", 
+        currentPage = 1;
+        updatePagination();
+        statusPanel.showStatus("Showing " + filteredTransactions.size() + " transactions", 
                              StatusPanel.StatusType.INFO);
+    }
+    
+    private boolean checkDateFilter(Transaction transaction, String dateFilter) {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime transactionDate = transaction.getCreatedAt();
+        
+        switch (dateFilter) {
+            case "Today":
+                return transactionDate.toLocalDate().equals(now.toLocalDate());
+            case "This Week":
+                return transactionDate.isAfter(now.minusWeeks(1));
+            case "This Month":
+                return transactionDate.isAfter(now.minusMonths(1));
+            default:
+                return true;
+        }
     }
     
     private void handleRefund(ActionEvent e) {
@@ -256,8 +342,9 @@ public class TransactionPanel extends JPanel {
             protected void done() {
                 try {
                     allTransactions = get();
-                    tableModel.setData(allTransactions);
-                    paginationPanel.updatePagination(allTransactions.size());
+                    filteredTransactions = new java.util.ArrayList<>(allTransactions);
+                    currentPage = 1;
+                    updatePagination();
                     updateButtonStates();
                     
                     statusPanel.showProgress("Transactions loaded", 100);
@@ -274,5 +361,82 @@ public class TransactionPanel extends JPanel {
         worker.execute();
     }
     
-
+    private void handleExport(java.awt.event.ActionEvent e) {
+        try {
+            if (allTransactions == null || allTransactions.isEmpty()) {
+                UIUtils.showWarning(this, "No transactions to export");
+                return;
+            }
+            
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Export Transactions");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("CSV Files", "csv"));
+            
+            if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!filePath.endsWith(".csv")) {
+                    filePath += ".csv";
+                }
+                
+                // Simple CSV export
+                StringBuilder csv = new StringBuilder();
+                csv.append("Date,Time,Merchant,Amount,Status,Type\n");
+                
+                for (Transaction t : allTransactions) {
+                    csv.append(String.format("%s,%s,%s,%.2f,%s,%s\n",
+                        t.getCreatedAt().toLocalDate(),
+                        t.getCreatedAt().toLocalTime().toString().substring(0, 5),
+                        t.getDescription(),
+                        t.getAmount(),
+                        t.getStatus(),
+                        t.getTransactionType()
+                    ));
+                }
+                
+                java.nio.file.Files.write(java.nio.file.Paths.get(filePath), csv.toString().getBytes());
+                UIUtils.showSuccess(this, "Transactions exported to: " + filePath);
+            }
+            
+        } catch (Exception ex) {
+            UIUtils.showError(this, "Export failed: " + ex.getMessage());
+        }
+    }
+    
+    private void updatePagination() {
+        if (filteredTransactions == null) filteredTransactions = allTransactions;
+        if (filteredTransactions == null) filteredTransactions = new java.util.ArrayList<>();
+        
+        totalPages = (int) Math.ceil((double) filteredTransactions.size() / itemsPerPage);
+        if (totalPages == 0) totalPages = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        
+        int startIndex = (currentPage - 1) * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, filteredTransactions.size());
+        
+        List<Transaction> pageTransactions = filteredTransactions.subList(startIndex, endIndex);
+        tableModel.setData(pageTransactions);
+        
+        paginationInfo.setText(String.format("Showing %d-%d of %d transactions", 
+            startIndex + 1, endIndex, filteredTransactions.size()));
+        pageLabel.setText(String.format("Page %d of %d", currentPage, totalPages));
+        
+        prevBtn.setEnabled(currentPage > 1);
+        nextBtn.setEnabled(currentPage < totalPages);
+    }
+    
+    private void previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    }
+    
+    private void nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+        }
+    }
+    
 }

@@ -158,24 +158,17 @@ public class CardDAO {
         return false;
     }
     
-    // DELETE - Delete card (soft delete if has transactions)
+    // DELETE - Delete card (hard delete)
     public boolean deleteCard(int cardId) {
-        // Check if card has transactions first
-        if (hasTransactions(cardId)) {
-            // Soft delete - deactivate card
-            return deactivateCard(cardId);
-        } else {
-            // Hard delete - remove completely
-            String deleteSql = "DELETE FROM cards WHERE card_id = ?";
+        String deleteSql = "DELETE FROM cards WHERE card_id = ?";
+        
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(deleteSql)) {
             
-            try (Connection conn = dbConnection.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(deleteSql)) {
-                
-                pstmt.setInt(1, cardId);
-                return pstmt.executeUpdate() > 0;
-            } catch (SQLException e) {
-                System.err.println("Error deleting card: " + e.getMessage());
-            }
+            pstmt.setInt(1, cardId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting card: " + e.getMessage());
         }
         return false;
     }

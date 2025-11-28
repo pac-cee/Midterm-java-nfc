@@ -35,11 +35,19 @@ public class ProfileDialog extends JDialog {
     }
     
     private void initializeComponents() {
-        fullNameField = new JTextField(20);
-        emailField = new JTextField(20);
-        currentPasswordField = new JPasswordField(20);
-        newPasswordField = new JPasswordField(20);
-        confirmPasswordField = new JPasswordField(20);
+        fullNameField = new JTextField(30);
+        emailField = new JTextField(30);
+        currentPasswordField = new JPasswordField(30);
+        newPasswordField = new JPasswordField(30);
+        confirmPasswordField = new JPasswordField(30);
+        
+        // Set preferred size for better appearance
+        Dimension fieldSize = new Dimension(300, 35);
+        fullNameField.setPreferredSize(fieldSize);
+        emailField.setPreferredSize(fieldSize);
+        currentPasswordField.setPreferredSize(fieldSize);
+        newPasswordField.setPreferredSize(fieldSize);
+        confirmPasswordField.setPreferredSize(fieldSize);
         
         updateButton = CustomButton.createPrimaryButton("Update Profile");
         changePasswordButton = CustomButton.createSecondaryButton("Change Password");
@@ -116,7 +124,7 @@ public class ProfileDialog extends JDialog {
     }
     
     private void setupDialog() {
-        setSize(450, 350);
+        setSize(500, 400);
         setLocationRelativeTo(getParent());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }

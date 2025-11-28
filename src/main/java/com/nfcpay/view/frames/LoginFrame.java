@@ -4,7 +4,6 @@ import com.nfcpay.controller.MainController;
 import com.nfcpay.model.User;
 import com.nfcpay.util.Session;
 import com.nfcpay.util.UIUtils;
-import com.nfcpay.util.ThemeManager;
 import com.nfcpay.util.NotificationManager;
 import com.nfcpay.exception.NFCPayException;
 import com.nfcpay.view.components.CustomButton;
@@ -78,24 +77,8 @@ public class LoginFrame extends JFrame {
         JLabel titleLabel = new JLabel("💳 NFC Payment System", SwingConstants.CENTER);
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 36));
-        
-        JButton themeButton = new JButton("🌙");
-        themeButton.setPreferredSize(new Dimension(50, 50));
-        themeButton.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        themeButton.setBackground(new Color(255, 255, 255, 100));
-        themeButton.setBorder(BorderFactory.createEmptyBorder());
-        themeButton.setFocusPainted(false);
-        themeButton.addActionListener(e -> {
-            ThemeManager.toggleTheme();
-            themeButton.setText(ThemeManager.isDarkMode() ? "☀️" : "🌙");
-        });
-        
-        JPanel headerContent = new JPanel(new BorderLayout());
-        headerContent.add(titleLabel, BorderLayout.CENTER);
-        headerContent.add(themeButton, BorderLayout.EAST);
-        headerContent.setOpaque(false);
-        headerContent.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
-        headerPanel.add(headerContent);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        headerPanel.add(titleLabel);
         
         // Main content with card design
         JPanel mainContainer = new JPanel(new GridBagLayout());

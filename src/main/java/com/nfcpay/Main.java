@@ -15,8 +15,7 @@ public class Main {
             UIManager.setLookAndFeel(new FlatLightLaf());
         } catch (Exception e) {
             System.err.println("Failed to initialize FlatLaf theme: " + e.getMessage());
-            // Fall back to default look and feel
-            System.err.println("Using default look and feel");
+            e.printStackTrace();
         }
         
         // Start application on EDT
