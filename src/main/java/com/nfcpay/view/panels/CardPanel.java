@@ -338,58 +338,109 @@ public class CardPanel extends JPanel {
     private void handleAddCardDialog() {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Card", true);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(400, 300);
+        dialog.setSize(500, 400);
         dialog.setLocationRelativeTo(this);
+        dialog.setBackground(UIUtils.getBackgroundColor());
         
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Professional Header
+        JPanel headerPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                GradientPaint gradient = new GradientPaint(0, 0, UIUtils.SUCCESS, getWidth(), 0, UIUtils.SUCCESS.brighter());
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        headerPanel.setLayout(new BorderLayout());
+        headerPanel.setPreferredSize(new Dimension(0, 80));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD));
+        
+        JLabel titleLabel = new JLabel("💳 Add New Card");
+        titleLabel.setFont(UIUtils.FONT_TITLE);
+        titleLabel.setForeground(Color.WHITE);
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        // Professional Form Card
+        JPanel formCard = UIUtils.createCard();
+        formCard.setLayout(new GridBagLayout());
+        formCard.setBackground(UIUtils.getSurfaceColor());
+        formCard.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD));
         
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(UIUtils.SPACING_SM, UIUtils.SPACING_SM, UIUtils.SPACING_SM, UIUtils.SPACING_SM);
         gbc.anchor = GridBagConstraints.WEST;
         
+        // Enhanced form fields
         JTextField nameField = new JTextField(20);
-        // Card number field removed - using auto-generated UID
+        nameField.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        nameField.setPreferredSize(new Dimension(300, 40));
+        nameField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIUtils.getBorderColor(), 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        
         JComboBox<CardType> typeCombo = new JComboBox<>(CardType.values());
+        typeCombo.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        typeCombo.setPreferredSize(new Dimension(300, 40));
+        
         JTextField balanceField = new JTextField("0.00", 20);
+        balanceField.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        balanceField.setPreferredSize(new Dimension(300, 40));
+        balanceField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIUtils.getBorderColor(), 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
         
+        // Form layout with icons
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Card Name:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(nameField, gbc);
+        JLabel nameLabel = new JLabel("📝 Card Name:");
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        nameLabel.setForeground(UIUtils.getTextColor());
+        formCard.add(nameLabel, gbc);
         
-
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        formCard.add(nameField, gbc);
         
-        gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Card Type:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(typeCombo, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        JLabel typeLabel = new JLabel("💳 Card Type:");
+        typeLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        typeLabel.setForeground(UIUtils.getTextColor());
+        formCard.add(typeLabel, gbc);
         
-        gbc.gridx = 0; gbc.gridy = 2;
-        formPanel.add(new JLabel("Initial Balance:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(balanceField, gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        formCard.add(typeCombo, gbc);
         
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(new Color(248, 249, 250));
-        buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(220, 221, 222)));
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        JLabel balanceLabel = new JLabel("💰 Initial Balance:");
+        balanceLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        balanceLabel.setForeground(UIUtils.getTextColor());
+        formCard.add(balanceLabel, gbc);
         
-        CustomButton saveButton = new CustomButton("💾 Save Card", CustomButton.ButtonStyle.SUCCESS);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        formCard.add(balanceField, gbc);
+        
+        // Professional Button Panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, UIUtils.SPACING_MD, UIUtils.SPACING_SM));
+        buttonPanel.setBackground(UIUtils.getBackgroundColor());
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_SM, 0, UIUtils.SPACING_SM, 0));
+        
+        CustomButton saveButton = new CustomButton("✅ Save Card", CustomButton.ButtonStyle.SUCCESS);
+        saveButton.setPreferredSize(new Dimension(140, 45));
         CustomButton cancelButton = new CustomButton("❌ Cancel", CustomButton.ButtonStyle.SECONDARY);
+        cancelButton.setPreferredSize(new Dimension(120, 45));
         
         saveButton.addActionListener(e -> {
             try {
                 if (nameField.getText().trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(dialog, "Card name is required", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    UIUtils.showError(dialog, "Card name is required");
                     return;
                 }
                 
-
-                
                 double balance = Double.parseDouble(balanceField.getText());
                 if (balance < 0) {
-                    JOptionPane.showMessageDialog(dialog, "Balance cannot be negative", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    UIUtils.showError(dialog, "Balance cannot be negative");
                     return;
                 }
                 
@@ -402,25 +453,32 @@ public class CardPanel extends JPanel {
                     new java.math.BigDecimal(balance));
                 
                 statusPanel.showProgress("Card created", 100);
-                JOptionPane.showMessageDialog(this, "Card added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                UIUtils.showSuccess(this, "Card added successfully!");
                 
                 dialog.dispose();
                 refreshData();
                 
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Please enter a valid balance amount", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                UIUtils.showError(dialog, "Please enter a valid balance amount");
             } catch (Exception ex) {
                 statusPanel.showStatus("Failed to create card", StatusPanel.StatusType.ERROR);
-                JOptionPane.showMessageDialog(dialog, "Failed to create card: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                UIUtils.showError(dialog, "Failed to create card: " + ex.getMessage());
             }
         });
         
         cancelButton.addActionListener(e -> dialog.dispose());
         
-        buttonPanel.add(cancelButton);
         buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
         
-        dialog.add(formPanel, BorderLayout.CENTER);
+        // Main container
+        JPanel mainContainer = new JPanel(new BorderLayout());
+        mainContainer.setBackground(UIUtils.getBackgroundColor());
+        mainContainer.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD, UIUtils.SPACING_MD));
+        mainContainer.add(formCard, BorderLayout.CENTER);
+        
+        dialog.add(headerPanel, BorderLayout.NORTH);
+        dialog.add(mainContainer, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }

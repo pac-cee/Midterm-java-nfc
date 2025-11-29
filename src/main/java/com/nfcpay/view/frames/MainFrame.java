@@ -26,66 +26,23 @@ public class MainFrame extends JFrame {
     private TransactionPanel transactionPanel;
     
     public MainFrame(MainController mainController) {
-        System.out.println("MainFrame constructor started");
         this.mainController = mainController;
-        
-        try {
-            System.out.println("Initializing components...");
-            initializeComponents();
-            
-            System.out.println("Setting up layout...");
-            setupLayout();
-            
-            System.out.println("Setting up event handlers...");
-            setupEventHandlers();
-            
-            System.out.println("Setting up frame...");
-            setupFrame();
-            
-            System.out.println("Showing dashboard...");
-            showDashboard();
-            
-            System.out.println("MainFrame constructor completed");
-        } catch (Exception e) {
-            System.err.println("Error in MainFrame constructor: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
+        initializeComponents();
+        setupLayout();
+        setupEventHandlers();
+        setupFrame();
+        showDashboard();
     }
     
     private void initializeComponents() {
-        System.out.println("Creating card layout...");
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
         
-        // Initialize panels one by one with error handling
-        try {
-            System.out.println("Creating dashboard panel...");
-            dashboardPanel = new DashboardPanel(mainController);
-            System.out.println("Dashboard panel created successfully");
-            
-            System.out.println("Creating card panel...");
-            cardPanel = new CardPanel(mainController);
-            System.out.println("Card panel created successfully");
-            
-            System.out.println("Creating wallet panel...");
-            walletPanel = new WalletPanel(mainController);
-            System.out.println("Wallet panel created successfully");
-            
-            System.out.println("Creating payment panel...");
-            paymentPanel = new PaymentPanel(mainController);
-            System.out.println("Payment panel created successfully");
-            
-            System.out.println("Creating transaction panel...");
-            transactionPanel = new TransactionPanel(mainController);
-            System.out.println("Transaction panel created successfully");
-            
-            System.out.println("All panels created successfully");
-        } catch (Exception e) {
-            System.err.println("Error creating panels: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
+        dashboardPanel = new DashboardPanel(mainController);
+        cardPanel = new CardPanel(mainController);
+        walletPanel = new WalletPanel(mainController);
+        paymentPanel = new PaymentPanel(mainController);
+        transactionPanel = new TransactionPanel(mainController);
     }
     
     private void setupLayout() {
@@ -111,81 +68,7 @@ public class MainFrame extends JFrame {
     
 
     
-    private JPanel createNavigationPanel() {
-        JPanel navPanel = new JPanel();
-        navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
-        navPanel.setBackground(new Color(248, 249, 250));
-        navPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
-        navPanel.setPreferredSize(new Dimension(280, 0));
-        
-        // User Info
-        JLabel userLabel = new JLabel("👋 Welcome, " + Session.getCurrentUser().getFullName());
-        userLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        userLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        navPanel.add(userLabel);
-        navPanel.add(Box.createVerticalStrut(20));
-        
-        // Navigation Buttons
-        JButton dashboardBtn = createNavButton("📊 Dashboard", "DASHBOARD");
-        JButton cardsBtn = createNavButton("💳 My Cards", "CARDS");
-        JButton walletBtn = createNavButton("💰 Wallet", "WALLET");
-        JButton paymentBtn = createNavButton("💸 Make Payment", "PAYMENT");
-        JButton transactionsBtn = createNavButton("📋 Transactions", "TRANSACTIONS");
-        
-        navPanel.add(dashboardBtn);
-        navPanel.add(Box.createVerticalStrut(10));
-        navPanel.add(cardsBtn);
-        navPanel.add(Box.createVerticalStrut(10));
-        navPanel.add(walletBtn);
-        navPanel.add(Box.createVerticalStrut(10));
-        navPanel.add(paymentBtn);
-        navPanel.add(Box.createVerticalStrut(10));
-        navPanel.add(transactionsBtn);
-        
-        // Push account buttons to bottom
-        navPanel.add(Box.createVerticalGlue());
-        navPanel.add(Box.createVerticalStrut(20));
-        
-        // Account Buttons
-        JButton profileBtn = createAccountButton("👤 Profile");
-        JButton logoutBtn = createAccountButton("🚪 Logout");
-        JButton aboutBtn = createAccountButton("ℹ️ About");
-        
-        profileBtn.addActionListener(e -> showProfile());
-        logoutBtn.addActionListener(this::handleLogout);
-        aboutBtn.addActionListener(e -> showAbout());
-        
-        navPanel.add(profileBtn);
-        navPanel.add(Box.createVerticalStrut(8));
-        navPanel.add(aboutBtn);
-        navPanel.add(Box.createVerticalStrut(8));
-        navPanel.add(logoutBtn);
-        
-        return navPanel;
-    }
-    
-    private JButton createNavButton(String text, String panelName) {
-        JButton button = new JButton(text);
-        button.setMaximumSize(new Dimension(240, 60));
-        button.setPreferredSize(new Dimension(240, 60));
-        button.setFont(new Font("SansSerif", Font.BOLD, 16));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.addActionListener(e -> showPanel(panelName));
-        return button;
-    }
-    
-    private JButton createAccountButton(String text) {
-        JButton button = new JButton(text);
-        button.setMaximumSize(new Dimension(240, 55));
-        button.setPreferredSize(new Dimension(240, 55));
-        button.setFont(new Font("SansSerif", Font.BOLD, 15));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setBackground(new Color(108, 117, 125));
-        button.setForeground(Color.WHITE);
-        button.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
-        button.setFocusPainted(false);
-        return button;
-    }
+
     
     private void setupEventHandlers() {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

@@ -140,7 +140,6 @@ public class DashboardPanel extends JPanel {
     
     public void refreshData() {
         try {
-            System.out.println("Refreshing dashboard data...");
             int userId = Session.getCurrentUser().getUserId();
             
             // Get real wallet balance
@@ -183,10 +182,7 @@ public class DashboardPanel extends JPanel {
                 paymentsLabel.setText("0 Payments");
             }
             
-            System.out.println("Dashboard data refreshed successfully");
-            
         } catch (Exception e) {
-            System.err.println("Dashboard refresh error: " + e.getMessage());
             e.printStackTrace();
         }
     }
