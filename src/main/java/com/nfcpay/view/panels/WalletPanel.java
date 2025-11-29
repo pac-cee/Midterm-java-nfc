@@ -24,6 +24,7 @@ public class WalletPanel extends JPanel {
     private JComboBox<Card> cardComboBox;
     private JButton addFundsButton;
     private JButton withdrawButton;
+    private JPanel activityList;
     
     public WalletPanel(MainController mainController) {
         this.mainController = mainController;
@@ -166,24 +167,13 @@ public class WalletPanel extends JPanel {
             "Recent Activity", 
             0, 0, UIUtils.FONT_HEADING, UIUtils.getTextColor()));
         
-        // Activity list
-        String[] activities = {
-            "+$100.00  Card Transfer    Nov 28",
-            "-$4.50    Starbucks       Nov 28", 
-            "-$29.99   Amazon          Nov 27",
-            "+$50.00   Card Transfer    Nov 26"
-        };
-        
-        JPanel activityList = new JPanel(new GridLayout(activities.length, 1, 0, UIUtils.SPACING_XS));
+        // Real wallet activity list
+        activityList = new JPanel();
+        activityList.setLayout(new BoxLayout(activityList, BoxLayout.Y_AXIS));
         activityList.setBackground(UIUtils.getSurfaceColor());
         activityList.setBorder(BorderFactory.createEmptyBorder(UIUtils.SPACING_SM, UIUtils.SPACING_SM, UIUtils.SPACING_SM, UIUtils.SPACING_SM));
         
-        for (String activity : activities) {
-            JLabel activityLabel = new JLabel(activity);
-            activityLabel.setFont(UIUtils.FONT_SMALL);
-            activityLabel.setForeground(activity.startsWith("+") ? UIUtils.SUCCESS : UIUtils.DANGER);
-            activityList.add(activityLabel);
-        }
+        updateRecentActivity(); // Load real data
         
         recentActivityPanel.add(activityList, BorderLayout.CENTER);
         
@@ -293,9 +283,97 @@ public class WalletPanel extends JPanel {
                 cardComboBox.addItem(card);
             }
             
+            // Update recent activity with real data
+            updateRecentActivity();
+            
         } catch (Exception e) {
             UIUtils.showError(this, "Failed to load wallet data: " + e.getMessage());
         }
+    }
+    
+    private void updateRecentActivity() {
+        // Use EDT for UI updates
+        SwingUtilities.invokeLater(() -> {
+            activityList.removeAll();
+            
+            try {
+                // Get recent transactions for wallet activity
+                List<com.nfcpay.model.Transaction> transactions = mainController.getPaymentController()
+                    .getTransactionHistory(Session.getCurrentUser().getUserId());
+                
+                // Show last 4 transactions
+                int count = Math.min(4, transactions.size());
+                for (int i = 0; i < count; i++) {
+                    com.nfcpay.model.Transaction t = transactions.get(i);
+                    addActivityItem(t);
+                }
+                
+                if (transactions.isEmpty()) {
+                    JLabel noActivity = new JLabel("No recent activity");
+                    noActivity.setFont(UIUtils.FONT_SMALL);
+                    noActivity.setForeground(UIUtils.NEUTRAL);
+                    noActivity.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    activityList.add(noActivity);
+                }
+                
+            } catch (Exception e) {
+                JLabel errorLabel = new JLabel("Unable to load activity");
+                errorLabel.setFont(UIUtils.FONT_SMALL);
+                errorLabel.setForeground(UIUtils.DANGER);
+                errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                activityList.add(errorLabel);
+            }
+            
+            activityList.revalidate();
+            activityList.repaint();
+        });
+    }
+    
+    private void addActivityItem(com.nfcpay.model.Transaction transaction) {
+        JPanel activityItem = new JPanel(new BorderLayout());
+        activityItem.setBackground(UIUtils.getSurfaceColor());
+        activityItem.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
+        activityItem.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        
+        // Amount with +/- indicator
+        String amountText = String.format("%s$%.2f", 
+            transaction.getTransactionType().toString().equals("PAYMENT") ? "-" : "+", 
+            transaction.getAmount());
+        
+        JLabel amountLabel = new JLabel(amountText);
+        amountLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        amountLabel.setForeground(amountText.startsWith("+") ? UIUtils.SUCCESS : UIUtils.DANGER);
+        
+        // Transaction details
+        JPanel detailPanel = new JPanel(new BorderLayout());
+        detailPanel.setBackground(UIUtils.getSurfaceColor());
+        
+        String icon = getTransactionIcon(transaction.getDescription());
+        JLabel descLabel = new JLabel(icon + " " + transaction.getDescription());
+        descLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        descLabel.setForeground(UIUtils.getTextColor());
+        
+        JLabel dateLabel = new JLabel(transaction.getCreatedAt().toLocalDate().toString());
+        dateLabel.setFont(UIUtils.FONT_SMALL);
+        dateLabel.setForeground(UIUtils.NEUTRAL);
+        
+        detailPanel.add(descLabel, BorderLayout.NORTH);
+        detailPanel.add(dateLabel, BorderLayout.SOUTH);
+        
+        activityItem.add(amountLabel, BorderLayout.WEST);
+        activityItem.add(detailPanel, BorderLayout.CENTER);
+        
+        activityList.add(activityItem);
+    }
+    
+    private String getTransactionIcon(String description) {
+        String desc = description.toLowerCase();
+        if (desc.contains("starbucks") || desc.contains("coffee")) return "☕";
+        if (desc.contains("amazon") || desc.contains("shopping")) return "📦";
+        if (desc.contains("transfer") || desc.contains("card")) return "💳";
+        if (desc.contains("gas") || desc.contains("shell")) return "⛽";
+        if (desc.contains("food") || desc.contains("restaurant")) return "🍕";
+        return "💰"; // Default wallet icon
     }
     
     // Custom renderer for card combo box
