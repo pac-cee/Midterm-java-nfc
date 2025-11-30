@@ -54,15 +54,44 @@ public class MainController {
     
     // Application initialization
     public void initializeApplication() throws NFCPayException {
-        // Any initialization logic can go here
-        System.out.println("NFC Payment System initialized successfully");
+        try {
+            // 1. Initialize database connection
+            com.nfcpay.dao.DatabaseConnection.getInstance();
+            
+            // 2. Clear any existing session
+            com.nfcpay.util.Session.logout();
+            
+            // 3. Validate service layer connectivity
+            validateServices();
+            
+            System.out.println("✅ NFC Payment System initialized successfully");
+        } catch (Exception e) {
+            throw new NFCPayException("INIT_FAILED", "Application initialization failed", e.getMessage());
+        }
+    }
+    
+    private void validateServices() throws NFCPayException {
+        // Test database connectivity through services
+        try {
+            authController.isLoggedIn(); // Simple validation call
+        } catch (Exception e) {
+            throw new NFCPayException("SERVICE_VALIDATION_FAILED", "Service layer validation failed", e.getMessage());
+        }
     }
     
     // Application shutdown
     public void shutdownApplication() {
-        if (isUserLoggedIn()) {
-            logout();
+        try {
+            if (isUserLoggedIn()) {
+                logout();
+            }
+            
+            // Clear session
+            com.nfcpay.util.Session.logout();
+            
+            System.out.println("✅ NFC Payment System shutdown completed");
+        } catch (Exception e) {
+            System.err.println("⚠️ Warning during shutdown: " + e.getMessage());
         }
-        System.out.println("NFC Payment System shutdown");
     }
 }
